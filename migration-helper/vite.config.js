@@ -1,88 +1,90 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { analyzeFolderPath } from "./local-analyzer.mjs";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { analyzeFolderPath, analyzeFolderPathDeep } from "./local-analyzer.mjs";
 
-const execFileAsync = promisify(execFile);
+function sendJson(res, statusCode, payload) {
+  res.statusCode = statusCode;
+  res.setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify(payload));
+}
 
-async function pickFolderPath() {
-  if (process.platform !== "win32") {
-    throw new Error("Browse folder is currently available only on Windows dev runs.");
+async function readJsonBody(req) {
+  const chunks = [];
+  for await (const chunk of req) {
+    chunks.push(chunk);
   }
 
-  const script = [
-    "Add-Type -AssemblyName System.Windows.Forms",
-    "$dialog = New-Object System.Windows.Forms.FolderBrowserDialog",
-    "$dialog.Description = 'Select a project folder to analyze'",
-    "$dialog.ShowNewFolderButton = $false",
-    "$result = $dialog.ShowDialog()",
-    "if ($result -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $dialog.SelectedPath }"
-  ].join("; ");
+  const raw = Buffer.concat(chunks).toString("utf8").trim();
+  return raw ? JSON.parse(raw) : {};
+}
 
-  const { stdout } = await execFileAsync("powershell.exe", ["-NoProfile", "-STA", "-Command", script], {
-    windowsHide: false
-  });
-
-  const selectedPath = String(stdout || "").trim();
-  if (!selectedPath) {
-    throw new Error("Folder selection was cancelled.");
-  }
-  return selectedPath;
+function resolveFolderPath(body) {
+  return String(body.path || body.folderPath || body.repoPath || "").trim();
 }
 
 function localQuickAnalysisPlugin() {
   return {
     name: "local-quick-analysis",
     configureServer(server) {
-      server.middlewares.use("/api/pick-folder", async (req, res, next) => {
-        if (req.method !== "POST") {
-          next();
-          return;
-        }
-
+      const handleQuickAnalysis = async (req, res) => {
         try {
-          const folderPath = await pickFolderPath();
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ path: folderPath }));
-        } catch (error) {
-          const message = error?.message || "Folder selection failed.";
-          res.statusCode = message.includes("cancelled") ? 400 : 500;
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ error: message }));
-        }
-      });
-
-      server.middlewares.use("/api/quick-analysis", async (req, res, next) => {
-        if (req.method !== "POST") {
-          next();
-          return;
-        }
-
-        try {
-          const chunks = [];
-          for await (const chunk of req) {
-            chunks.push(chunk);
-          }
-          const body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
-          const folderPath = String(body.path || "").trim();
+          const body = await readJsonBody(req);
+          const folderPath = resolveFolderPath(body);
           if (!folderPath) {
-            res.statusCode = 400;
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ error: "Folder path is required." }));
+            sendJson(res, 400, { error: "Folder path is required." });
             return;
           }
 
-          const report = await analyzeFolderPath(folderPath);
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify(report));
+          const report = await analyzeFolderPath(folderPath, body);
+          sendJson(res, 200, report);
         } catch (error) {
-          res.statusCode = 500;
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ error: error?.message || "Quick analysis failed." }));
+          sendJson(res, 500, { error: error?.message || "Quick analysis failed." });
         }
+      };
+
+      const handleDeepAnalysis = async (req, res) => {
+        try {
+          const body = await readJsonBody(req);
+          const folderPath = resolveFolderPath(body);
+          if (!folderPath) {
+            sendJson(res, 400, { error: "Folder path is required." });
+            return;
+          }
+
+          const report = await analyzeFolderPathDeep(folderPath, body);
+          sendJson(res, 200, report);
+        } catch (error) {
+          sendJson(res, 500, { error: error?.message || "Deep analysis failed." });
+        }
+      };
+
+      const analysisRoutes = new Set([
+        "/api/quick-analysis",
+        "/api/analyze/quick"
+      ]);
+
+      const deepRoutes = new Set([
+        "/api/deep-analysis",
+        "/api/analyze/deep"
+      ]);
+
+      server.middlewares.use(async (req, res, next) => {
+        if (req.method !== "POST") {
+          next();
+          return;
+        }
+
+        if (analysisRoutes.has(req.url)) {
+          await handleQuickAnalysis(req, res);
+          return;
+        }
+
+        if (deepRoutes.has(req.url)) {
+          await handleDeepAnalysis(req, res);
+          return;
+        }
+
+        next();
       });
     }
   };

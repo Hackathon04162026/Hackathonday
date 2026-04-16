@@ -44,7 +44,7 @@ const NAV_ITEMS = [
 ];
 
 const PAGE_COPY = {
-  home: ["Folder-first scan", "Home", "Choose a project folder or enter a local path, run quick analysis, review the short report, and then prepare target versions for deeper analysis."],
+  home: ["Folder-first scan", "Home", "Choose a sample folder from the dropdown or enter a local path, run quick analysis, review the short report, and then prepare target versions for deeper analysis."],
   overview: ["Current state", "Overview", "See the selected scan at a glance with summary metrics, lifecycle status, and export shortcuts."],
   analysis: ["Findings", "Analysis", "Review detector rows, policy statuses, recommendations, and warnings in a single filterable table."],
   documentation: ["Knowledge handoff", "Documentation", "Turn the selected report into Confluence-friendly sections and copyable summary payloads."],
@@ -53,7 +53,7 @@ const PAGE_COPY = {
 };
 
 const HELP_SECTIONS = [
-  ["Home", "Project intake and scan control", "This page starts the workflow. It contains the folder path field, the quick analysis progress bar, the short report, and the target-version section."],
+  ["Home", "Project intake and scan control", "This page starts the workflow. It contains the sample-folder dropdown, the folder path field, the quick analysis progress bar, the short report, and the target-version section."],
   ["Overview", "Metrics and snapshot", "This page gives the executive summary: scan counts, selected scan status, lifecycle, and report readiness."],
   ["Analysis", "Findings and review", "This page shows the detailed detector rows, support policy entries, recommendations, and warnings."],
   ["Documentation", "Confluence-ready output", "This page groups the report into reusable documentation blocks that are easy to copy into a team wiki."],
@@ -502,38 +502,13 @@ export default function App() {
   function resetQuickFlow() {
     setQuickLoading(false);
     setQuickProgress(0);
-    setQuickStage("Ready to scan a folder.");
+    setQuickStage("Ready to scan a project folder.");
     setQuickReport(null);
     setTargetSelections({});
     setGuardrails(buildGuardrailDefaults());
     setDeepAnalysisReady(false);
     setApprovalChoice("no");
     setSamplePreview(null);
-  }
-
-  async function handleBrowseFolder() {
-    try {
-      const response = await fetch("/api/pick-folder", { method: "POST" });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error || "Folder selection failed.");
-      }
-      const nextPath = String(payload?.path || "").trim();
-      if (!nextPath) {
-        return;
-      }
-      resetQuickFlow();
-      setPathForm((current) => ({ ...current, path: nextPath }));
-      const matchingSample = resolveSampleForPath(nextPath, selectedSample);
-      setSampleChoice(matchingSample?.id || "");
-      setNotice({ tone: "info", message: "Folder path loaded into the textbox." });
-    } catch (error) {
-      if (String(error?.message || "").includes("cancelled")) {
-        setNotice({ tone: "warning", message: "Folder selection was cancelled." });
-        return;
-      }
-      setNotice({ tone: "danger", message: error?.message || "Folder selection failed." });
-    }
   }
 
   async function startQuickAnalysis(event) {
@@ -654,6 +629,17 @@ export default function App() {
     setTargetSelections((current) => ({ ...current, [itemId]: value }));
   }
 
+  function handleSampleFolderChange(event) {
+    const nextId = event.target.value;
+    const sample = SAMPLE_PROJECTS.find((entry) => entry.id === nextId) || null;
+    resetQuickFlow();
+    setSampleChoice(nextId);
+    setPathForm((current) => ({ ...current, path: sample?.path || "" }));
+    if (sample) {
+      setNotice({ tone: "info", message: `${sample.label} loaded into the folder path field.` });
+    }
+  }
+
   function downloadCompleteReport() {
     if (!quickReport) {
       setNotice({ tone: "warning", message: "Run quick analysis before downloading the complete report." });
@@ -718,7 +704,7 @@ export default function App() {
           <section id="api-reference" style={STYLES.brand}>
             <p style={STYLES.eyebrow}>Workspace snapshot</p>
             <h2 style={{ margin: 0 }}>Included flows</h2>
-            <p style={STYLES.subtitle}>Manual path scans, quick analysis, target selection, documentation, roadmap, and help all live in one workspace.</p>
+            <p style={STYLES.subtitle}>Sample-folder dropdowns, manual path scans, quick analysis, target selection, documentation, roadmap, and help all live in one workspace.</p>
             <div style={STYLES.threeCol}>
               <MetricCard label="Total scans" value={summary.totalScans} />
               <MetricCard label="Complete" value={summary.completeScans} />
@@ -783,9 +769,19 @@ export default function App() {
                     <div className="stack">
                       <div>
                         <p style={STYLES.cardEyebrow}>Folder-first scan</p>
-                        <h2 style={{ marginTop: 0 }}>Start with one folder path</h2>
-                        <p className="muted-line">Type the local folder path, then run quick analysis to surface the stack inventory from that project location.</p>
+                        <h2 style={{ marginTop: 0 }}>Start with one folder path or sample project</h2>
+                        <p className="muted-line">Choose a sample folder from the dropdown or type a local folder path, then run quick analysis to surface the stack inventory from that project location.</p>
                       </div>
+                        <Field label="Sample folder location">
+                          <select value={sampleChoice} onChange={handleSampleFolderChange}>
+                            <option value="">Select a sample folder</option>
+                            {SAMPLE_PROJECTS.map((sample) => (
+                              <option key={sample.id} value={sample.id}>
+                                {sample.label}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
                         <Field label="Folder path">
                           <input
                             value={pathForm.path}
@@ -800,14 +796,11 @@ export default function App() {
                           />
                         </Field>
                       <div className="actions-row">
-                        <button type="button" className="secondary" onClick={() => void handleBrowseFolder()} disabled={quickLoading}>
-                          Browse folder
-                        </button>
                         <button type="button" onClick={(event) => void startQuickAnalysis(event)} disabled={quickLoading}>
                           {quickLoading ? `${quickProgress}% scanning` : "Quick analysis"}
                         </button>
                       </div>
-                      <p className="muted-line">Paste the project folder path and quick analysis will scan that location directly on your machine.</p>
+                      <p className="muted-line">Choose a sample folder or paste a project folder path and quick analysis will scan that location directly on your machine.</p>
                     </div>
                     <div className="stack">
                       <div className="card" style={{ padding: 18 }}>
@@ -1144,7 +1137,8 @@ export default function App() {
                 <div className="table-wrap">
                   <table>
                     <tbody>
-                        <tr><td><strong>Manual path</strong></td><td>Lets you paste a local folder path directly before scanning.</td></tr>
+                      <tr><td><strong>Sample folder location</strong></td><td>Loads one of the bundled demo folders into the folder path field for a quick test.</td></tr>
+                      <tr><td><strong>Manual path</strong></td><td>Lets you paste a local folder path directly before scanning.</td></tr>
                       <tr><td><strong>Use</strong></td><td>Loads the selected scan into the workspace views.</td></tr>
                       <tr><td><strong>Details</strong></td><td>Opens the selected scan drawer for a closer look.</td></tr>
                       <tr><td><strong>Export JSON</strong></td><td>Downloads the current scan list or report rows as JSON.</td></tr>

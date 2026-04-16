@@ -199,6 +199,11 @@ export async function analyzeFolderPath(folderPath) {
   });
 }
 
+export async function analyzeFolderPathDeep(folderPath, context = {}) {
+  const quickReport = await analyzeFolderPath(folderPath);
+  return decorateAnalysisResponse(quickReport, "deep", context);
+}
+
 function buildReportFromProfile({ sampleId, sampleLabel, folderPath, technology, profile }) {
   const targets = [
     ...profile.technologies.map((item) => ({ group: "Technology", ...item })),
@@ -233,6 +238,214 @@ function buildReportFromProfile({ sampleId, sampleLabel, folderPath, technology,
     primaryTechnology: technology,
     generatedAt: new Date().toISOString()
   };
+}
+
+function decorateAnalysisResponse(report, stage, context = {}) {
+  const guardrails = normalizeGuardrails(context.guardrails);
+  const requestedTargets = normalizeRequestedTargets(context.targets);
+  const workload = buildCodexWorkload(report, stage, guardrails, requestedTargets);
+  const menuState = buildMenuState(stage, report, workload);
+  const scan = {
+    folderPath: report.folderPath,
+    sampleId: report.sampleId,
+    sampleLabel: report.sampleLabel,
+    primaryTechnology: report.primaryTechnology,
+    technologyCount: report.technologies?.length || 0,
+    databaseCount: report.databases?.length || 0,
+    libraryCount: report.libraries?.length || 0,
+    riskCount: report.risks?.length || 0
+  };
+
+  return {
+    ...report,
+    analysisKind: stage,
+    engine: "codex-local",
+    assistant: {
+      name: "Codex",
+      mode: "local",
+      network: false,
+      stage
+    },
+    scan,
+    guardrails,
+    requestedTargets,
+    workload,
+    menuState,
+    codex: {
+      enabled: true,
+      stage,
+      assistedWorkPercent: workload.codexPercent,
+      manualWorkPercent: workload.manualPercent,
+      summary: workload.summary,
+      notes: workload.notes,
+      readinessScore: workload.readinessScore
+    },
+    quick: buildQuickView(report, workload, menuState, guardrails, requestedTargets),
+    deep: stage === "deep" ? buildDeepView(report, workload, menuState, guardrails, requestedTargets) : null
+  };
+}
+
+function buildQuickView(report, workload, menuState, guardrails, requestedTargets) {
+  return {
+    headline: report.summary,
+    codexCoveragePercent: workload.codexPercent,
+    manualCoveragePercent: workload.manualPercent,
+    risks: report.risks,
+    nextSteps: report.nextSteps,
+    targetPreview: report.targets.slice(0, 6),
+    guardrails,
+    requestedTargets,
+    menuState
+  };
+}
+
+function buildDeepView(report, workload, menuState, guardrails, requestedTargets) {
+  const targetsByGroup = groupBy(report.targets, "group");
+  const unsupported = report.rows.filter((row) => isLegacyVersion(`${row.label || row.item || row.target || ""} ${row.current || row.version || ""}`));
+
+  return {
+    readinessScore: workload.readinessScore,
+    automationSplit: {
+      codexPercent: workload.codexPercent,
+      manualPercent: workload.manualPercent
+    },
+    summary: report.summary,
+    highlights: report.risks.map((risk) => ({ kind: "risk", text: risk })),
+    manualReview: buildManualReviewItems(report, guardrails),
+    automationWins: [
+      "Manifest and dependency inventory",
+      "Target version shaping",
+      "Documentation draft generation",
+      "Roadmap structuring"
+    ],
+    targetGroups: targetsByGroup,
+    unsupportedTargets: unsupported,
+    menuState,
+    guardrails,
+    requestedTargets
+  };
+}
+
+function buildManualReviewItems(report, guardrails) {
+  const items = [];
+  if (report.databases.length) {
+    items.push("Database compatibility and cutover sign-off");
+  }
+  if (report.risks.length) {
+    items.push("Review unsupported versions and complexity hotspots");
+  }
+  if (guardrails.length) {
+    items.push("Validate enterprise guardrails before release promotion");
+  }
+  if (!items.length) {
+    items.push("Manual review is still recommended for final target approval");
+  }
+  return items;
+}
+
+function buildMenuState(stage, report, workload) {
+  const ready = stage === "deep";
+  const readinessLabel = `${workload.readinessScore}% ready`;
+  return {
+    home: {
+      status: ready ? "updated" : "scanned",
+      note: ready ? readinessLabel : "Quick analysis complete"
+    },
+    overview: {
+      status: ready ? "ready" : "pending",
+      note: ready ? readinessLabel : "Waiting for deep analysis"
+    },
+    analysis: {
+      status: ready ? "ready" : "pending",
+      note: ready ? `${report.risks.length} risk signal${report.risks.length === 1 ? "" : "s"} reviewed` : "Waiting for deep analysis"
+    },
+    documentation: {
+      status: ready ? "ready" : "pending",
+      note: ready ? `${report.libraries.length} libraries mapped` : "Waiting for deep analysis"
+    },
+    roadmap: {
+      status: ready ? "ready" : "pending",
+      note: ready ? `Codex covers ${workload.codexPercent}% of the planning work` : "Waiting for deep analysis"
+    },
+    help: {
+      status: "ready",
+      note: "Available at any time"
+    }
+  };
+}
+
+function buildCodexWorkload(report, stage, guardrails, requestedTargets) {
+  const riskPressure = Math.min(6, report.risks.length) * 2;
+  const techPressure = Math.min(4, report.technologies.length + report.databases.length) * 1;
+  const guardrailPressure = Math.min(4, guardrails.length) * 2;
+  const targetPressure = Math.min(3, requestedTargets.length);
+  const base = stage === "deep" ? 61 : 58;
+  const codexPercent = clamp(base - riskPressure + techPressure - guardrailPressure - targetPressure, 50, 65);
+  const manualPercent = 100 - codexPercent;
+  const readinessScore = clamp(92 - riskPressure - guardrailPressure + techPressure - targetPressure, 34, 98);
+
+  return {
+    codexPercent,
+    manualPercent,
+    readinessScore,
+    summary: `Codex covers ${codexPercent}% of the interpretation and planning work while manual review covers ${manualPercent}% of the governance and release decisions.`,
+    notes: [
+      `${report.technologies.length} technology signal${report.technologies.length === 1 ? "" : "s"} mapped locally`,
+      `${report.databases.length} database signal${report.databases.length === 1 ? "" : "s"} reviewed for compatibility`,
+      `${guardrails.length} enterprise guardrail${guardrails.length === 1 ? "" : "s"} applied to the plan`
+    ]
+  };
+}
+
+function normalizeGuardrails(guardrails) {
+  if (!Array.isArray(guardrails)) {
+    return [];
+  }
+
+  return guardrails
+    .map((entry) => {
+      if (!entry) return null;
+      if (typeof entry === "string") {
+        return { label: entry, value: entry, source: "local" };
+      }
+      const label = entry.label || entry.value || entry.name || entry.title;
+      if (!label) return null;
+      return {
+        label,
+        value: entry.value || label,
+        source: entry.source || "local"
+      };
+    })
+    .filter(Boolean);
+}
+
+function normalizeRequestedTargets(targets) {
+  if (!Array.isArray(targets)) {
+    return [];
+  }
+
+  return targets
+    .map((entry) => {
+      if (!entry) return null;
+      if (typeof entry === "string") return entry;
+      return entry.target || entry.defaultTarget || entry.current || entry.label || null;
+    })
+    .filter(Boolean);
+}
+
+function groupBy(items, key) {
+  return items.reduce((acc, item) => {
+    const group = item?.[key] || "Ungrouped";
+    if (!acc[group]) {
+      acc[group] = [];
+    }
+    acc[group].push(item);
+    return acc;
+  }, {});
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function safeJson(text) {
