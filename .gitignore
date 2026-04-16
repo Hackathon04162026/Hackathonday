@@ -6,3 +6,5 @@ Desktop.ini
 .vscode/
 
 *.log
+__pycache__/
+*.pyc

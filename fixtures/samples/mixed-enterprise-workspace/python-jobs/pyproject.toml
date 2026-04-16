@@ -1,0 +1,13 @@
+[project]
+name = "python-jobs"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.115.0",
+  "uvicorn==0.30.6",
+  "pydantic==2.8.2",
+  "psycopg2-binary==2.9.9",
+  "sqlalchemy==2.0.32",
+  "requests==2.32.3",
+  "celery==5.4.0"
+]

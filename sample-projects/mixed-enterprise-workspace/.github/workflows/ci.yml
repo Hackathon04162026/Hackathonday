@@ -1,0 +1,25 @@
+name: mixed-workspace-ci
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module:
+          - java-service
+          - angular-portal
+          - react-dashboard
+          - dotnet-api
+          - python-jobs
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show repository layout
+        run: ls -la
+      - name: Detect module presence
+        run: test -d "${{ matrix.module }}"
+      - name: Emit modernization note
+        run: echo "Detected ${{ matrix.module }} for modernization review"
