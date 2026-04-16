@@ -1,0 +1,61 @@
+[
+  {
+    "id": "plan-feature-ready",
+    "displayName": "Refinement Workspace",
+    "productName": "Refinement Workspace",
+    "programLead": "Delivery Lead",
+    "stage": "FEATURE_REVIEW",
+    "currentStage": "FEATURE_REVIEW",
+    "updatedAt": "2026-04-16T10:15:00.000Z",
+    "counts": {
+      "epics": 3,
+      "features": 2,
+      "stories": 0
+    },
+    "reviewCheckpoints": [
+      {
+        "stage": "epics",
+        "label": "Epic review",
+        "status": "approved",
+        "reviewer": "Delivery Lead",
+        "notes": "Approved for feature decomposition."
+      },
+      {
+        "stage": "features",
+        "label": "Feature review",
+        "status": "pending",
+        "notes": "Feature review opens after epic approval."
+      }
+    ]
+  },
+  {
+    "id": "plan-story-ready",
+    "displayName": "Planning Workflow Hub",
+    "productName": "Planning Workflow Hub",
+    "programLead": "Program Lead",
+    "stage": "STORY_READY",
+    "currentStage": "STORY_READY",
+    "updatedAt": "2026-04-16T11:00:00.000Z",
+    "counts": {
+      "epics": 3,
+      "features": 4,
+      "stories": 4
+    },
+    "reviewCheckpoints": [
+      {
+        "stage": "epics",
+        "label": "Epic review",
+        "status": "approved",
+        "reviewer": "Program Lead",
+        "notes": "Epic review completed."
+      },
+      {
+        "stage": "features",
+        "label": "Feature review",
+        "status": "approved",
+        "reviewer": "Agile Facilitator",
+        "notes": "Feature review completed."
+      }
+    ]
+  }
+]

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_REPORT_FILTERS,
   DEFAULT_SCAN_FILTERS,
@@ -18,6 +18,28 @@ import {
   formatDate,
   prettySource
 } from "./ui";
+import {
+  PLANNING_SEED_VISION,
+  PLANNING_STAGES,
+  PlanningError,
+  REVIEW_STAGES,
+  approveReview,
+  completeOnboardingTask,
+  createPlan,
+  getPlanSummary
+} from "./planning";
+import {
+  buildRefinementSampleRequest,
+  buildTestCaseGenerationRequest,
+  createRefinementStoryPackage,
+  generateTestCases
+} from "./refinement";
+import {
+  DEFAULT_ONBOARDING_AGENT_NAME,
+  ONBOARDING_JOURNEY_TYPES,
+  answerOnboardingQuery,
+  loadOnboardingDocuments
+} from "./onboarding/onboardingAgent";
 import sampleProjectCatalog from "../../plugins/sample-project-analyzer/catalog/sample-projects.json";
 
 const EMPTY_ARCHIVE_FORM = {
@@ -34,12 +56,51 @@ const EMPTY_PATH_FORM = {
   requestedBy: ""
 };
 
+const EMPTY_VISION_FORM = {
+  productName: "",
+  programLead: "",
+  targetUsers: "",
+  vision: "",
+  desiredOutcomes: ""
+};
+
+const EMPTY_REVIEW_FORM = {
+  reviewer: "",
+  notes: ""
+};
+
+const EMPTY_REFINEMENT_FORM = {
+  notes: "",
+  candidateProblemStatement: "",
+  candidateStorySummary: "",
+  parentEpicLink: "",
+  labels: "",
+  sprint: "",
+  estimatePoints: "",
+  references: "",
+  teamContext: ""
+};
+
+const EMPTY_TEST_CASE_FORM = {
+  storySummary: "",
+  acceptanceCriteria: "",
+  storyTitle: "",
+  environment: "mock"
+};
+
+const EMPTY_ONBOARDING_FORM = {
+  role: "",
+  journeyType: "",
+  question: ""
+};
+
 const NAV_ITEMS = [
   { id: "home", label: "Home", kicker: "Project intake" },
   { id: "overview", label: "Overview", kicker: "Metrics and inventory" },
   { id: "analysis", label: "Analysis", kicker: "Findings and review" },
   { id: "documentation", label: "Documentation", kicker: "Confluence-ready notes" },
   { id: "roadmap", label: "Roadmap", kicker: "Phases and effort" },
+  { id: "planning", label: "Planning hub", kicker: "Vision to story" },
   { id: "help", label: "Help", kicker: "What each section does" }
 ];
 
@@ -49,6 +110,7 @@ const PAGE_COPY = {
   analysis: ["Findings", "Analysis", "Review detector rows, policy statuses, recommendations, and warnings in a single filterable table."],
   documentation: ["Knowledge handoff", "Documentation", "Turn the selected report into Confluence-friendly sections and copyable summary payloads."],
   roadmap: ["Delivery plan", "Roadmap", "Translate the scan into migration phases, effort notes, and practical automation versus manual review."],
+  planning: ["Agile delivery hub", "Planning hub", "Use the new planning, refinement, QE, and onboarding surfaces without leaving the workspace."],
   help: ["Guide", "Help", "Learn what each tab, button, and export action does before you start exploring a scan."]
 };
 
@@ -254,7 +316,7 @@ const STYLES = {
   title: { margin: 0, fontSize: "clamp(2rem, 4vw, 3.4rem)", lineHeight: 1.02, letterSpacing: "-0.03em" },
   subtitle: { margin: 0, maxWidth: "72ch", color: "var(--muted)", lineHeight: 1.6 },
   chipRow: { display: "flex", flexWrap: "wrap", gap: "10px" },
-  navBar: { display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: "10px", padding: "12px", ...SURFACE },
+  navBar: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px", padding: "14px", ...SURFACE },
   navButton: (active) => ({
     minHeight: "64px",
     padding: "12px 14px",
@@ -279,6 +341,15 @@ const STYLES = {
   twoCol: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "18px" },
   threeCol: { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "16px" },
   fourCol: { display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "16px" },
+  workspaceGrid: { display: "grid", gap: "16px" },
+  planningHero: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" },
+  planningGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" },
+  planningStack: { display: "grid", gap: "12px" },
+  planningMiniGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "12px" },
+  planningCallout: { padding: "16px", borderRadius: "18px", border: "1px solid rgba(31, 94, 255, 0.14)", background: "linear-gradient(180deg, rgba(31, 94, 255, 0.08), rgba(255,255,255,0.92))" },
+  planningSurface: { padding: "16px", borderRadius: "18px", border: "1px solid rgba(25, 35, 52, 0.08)", background: "linear-gradient(180deg, #ffffff, #f8fbff)" },
+  planningList: { margin: 0, paddingLeft: "18px", display: "grid", gap: "8px", color: "var(--muted)", lineHeight: 1.55 },
+  planningTable: { width: "100%", borderCollapse: "separate", borderSpacing: 0 },
   card: { padding: "18px", ...SURFACE },
   cardHeader: { display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "14px" },
   cardEyebrow: { margin: "0 0 6px", fontSize: "0.72rem", fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--primary-strong)" },
@@ -308,6 +379,7 @@ export default function App() {
   const [reportFilters, setReportFilters] = useState(DEFAULT_REPORT_FILTERS);
   const [notice, setNotice] = useState(null);
   const [scanListStatus, setScanListStatus] = useState("Loading scans...");
+  const [archiveForm, setArchiveForm] = useState(EMPTY_ARCHIVE_FORM);
   const [pathForm, setPathForm] = useState(EMPTY_PATH_FORM);
   const [sampleChoice, setSampleChoice] = useState("");
   const [quickLoading, setQuickLoading] = useState(false);
@@ -319,6 +391,14 @@ export default function App() {
   const [deepAnalysisReady, setDeepAnalysisReady] = useState(false);
   const [approvalChoice, setApprovalChoice] = useState("no");
   const [samplePreview, setSamplePreview] = useState(null);
+  const [workspaceHub, setWorkspaceHub] = useState(() => createPlanningWorkspaceFallback());
+  const [workspaceHubStatus, setWorkspaceHubStatus] = useState("Loading planning workspace...");
+  const [visionForm, setVisionForm] = useState(EMPTY_VISION_FORM);
+  const [reviewForm, setReviewForm] = useState(EMPTY_REVIEW_FORM);
+  const [refinementForm, setRefinementForm] = useState(EMPTY_REFINEMENT_FORM);
+  const [testCaseForm, setTestCaseForm] = useState(EMPTY_TEST_CASE_FORM);
+  const [onboardingForm, setOnboardingForm] = useState(EMPTY_ONBOARDING_FORM);
+  const planningMode = useMemo(() => new URLSearchParams(window.location.search).get("mode") === "live" ? "live" : "mock", []);
 
   useEffect(() => {
     void bootstrap();
@@ -333,6 +413,30 @@ export default function App() {
   const roadmapSections = useMemo(() => buildRoadmapSections(selectedScan, selectedReport), [selectedScan, selectedReport]);
   const analysisHighlights = useMemo(() => buildAnalysisHighlights(selectedScan, selectedReport), [selectedScan, selectedReport]);
   const guardrailSummary = useMemo(() => buildGuardrailSummary(guardrails), [guardrails]);
+  const selectedPlan = useMemo(
+    () => workspaceHub.plans.find((plan) => plan.id === workspaceHub.selectedPlanId) || workspaceHub.plans[0] || null,
+    [workspaceHub]
+  );
+  const selectedPlanSummary = useMemo(
+    () => (selectedPlan ? getPlanSummary(selectedPlan) : null),
+    [selectedPlan]
+  );
+  const planningSummary = useMemo(
+    () => summarizePlanCollection(workspaceHub.plans),
+    [workspaceHub.plans]
+  );
+  const refinementSummary = useMemo(
+    () => summarizeRefinementPreview(workspaceHub.refinement),
+    [workspaceHub.refinement]
+  );
+  const testCaseSummary = useMemo(
+    () => summarizeTestCasePreview(workspaceHub.testCases),
+    [workspaceHub.testCases]
+  );
+  const onboardingSummary = useMemo(
+    () => summarizeOnboardingPreview(workspaceHub.onboarding),
+    [workspaceHub.onboarding]
+  );
 
   useEffect(() => {
     return () => {
@@ -344,7 +448,17 @@ export default function App() {
 
   async function bootstrap() {
     try {
-      const loadedScans = await loadScans();
+      await loadScans();
+      try {
+        await loadWorkspaceHub();
+      } catch (workspaceError) {
+        console.warn(workspaceError);
+        setWorkspaceHubStatus("Using built-in planning workspace fallback.");
+      }
+      setNotice({
+        tone: "info",
+        message: "Static mode is active. The React app is using the checked-in JSON payloads under /mock-data/ for scans, quick analysis, planning, refinement, QE, and onboarding."
+      });
     } catch (error) {
       handleUiError(error);
     }
@@ -356,6 +470,201 @@ export default function App() {
     setScans(loadedScans);
     setScanListStatus(`Loaded ${loadedScans.length} scan${loadedScans.length === 1 ? "" : "s"}.`);
     return loadedScans;
+  }
+
+  async function loadWorkspaceHub() {
+    setWorkspaceHubStatus(planningMode === "live" ? "Connecting to planning APIs and loading generated previews..." : "Loading planning fixtures...");
+
+    const hub = planningMode === "live"
+      ? await loadLivePlanningWorkspace()
+      : await loadMockPlanningWorkspace();
+
+    setWorkspaceHub(hub);
+    const initialPlan = hub.plans.find((plan) => plan.id === hub.selectedPlanId) || hub.plans[0] || null;
+    setVisionForm({
+      ...EMPTY_VISION_FORM,
+      targetUsers: initialPlan?.targetUsers || PLANNING_SEED_VISION.targetUsers
+    });
+    syncWorkspaceForms(hub, setReviewForm, setRefinementForm, setTestCaseForm, setOnboardingForm);
+    setWorkspaceHubStatus(planningMode === "live" ? "Planning APIs connected. Refinement, QE, and onboarding stay on generated previews until you submit live requests." : "Planning fixtures loaded.");
+    return hub;
+  }
+
+  function selectWorkspacePlan(planId) {
+    const nextHub = { ...workspaceHub, selectedPlanId: planId };
+    setWorkspaceHub(nextHub);
+    syncWorkspaceForms(nextHub, setReviewForm, setRefinementForm, setTestCaseForm, setOnboardingForm);
+  }
+
+  async function submitVisionPlan(event) {
+    event.preventDefault();
+
+    try {
+      const desiredOutcomes = splitMultiline(visionForm.desiredOutcomes);
+      const input = {
+        productName: visionForm.productName,
+        programLead: visionForm.programLead,
+        targetUsers: visionForm.targetUsers,
+        vision: visionForm.vision,
+        desiredOutcomes
+      };
+
+      const nextPlan = planningMode === "live"
+        ? await fetchJson("/api/plans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input)
+        })
+        : createPlan(input, { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+
+      const plans = [nextPlan, ...workspaceHub.plans.filter((plan) => plan.id !== nextPlan.id)];
+      const nextHub = { ...workspaceHub, plans, selectedPlanId: nextPlan.id };
+      setWorkspaceHub(nextHub);
+      syncWorkspaceForms(nextHub, setReviewForm, setRefinementForm, setTestCaseForm, setOnboardingForm);
+      setVisionForm(EMPTY_VISION_FORM);
+      setWorkspaceHubStatus(`Created ${nextPlan.productName}.`);
+      setNotice({ tone: "success", message: `Created planning workflow for ${nextPlan.productName}.` });
+      setActivePage("planning");
+    } catch (error) {
+      handleWorkspaceError(error, "Unable to create the plan.");
+    }
+  }
+
+  async function submitPlanReviewApproval(stage) {
+    if (!selectedPlan) {
+      setWorkspaceHubStatus("Select a plan before approving a review stage.");
+      return;
+    }
+
+    try {
+      const payload = {
+        reviewer: reviewForm.reviewer,
+        notes: reviewForm.notes
+      };
+      const updatedPlan = planningMode === "live"
+        ? await fetchJson(`/api/plans/${encodeURIComponent(selectedPlan.id)}/reviews/${encodeURIComponent(stage.toLowerCase())}/approve`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        : approveReview(selectedPlan, stage, payload, { reviewedAt: new Date().toISOString() });
+
+      const plans = workspaceHub.plans.map((plan) => (plan.id === updatedPlan.id ? updatedPlan : plan));
+      const nextHub = { ...workspaceHub, plans, selectedPlanId: updatedPlan.id };
+      setWorkspaceHub(nextHub);
+      syncWorkspaceForms(nextHub, setReviewForm, setRefinementForm, setTestCaseForm, setOnboardingForm);
+      setWorkspaceHubStatus(`${prettyReviewStage(stage)} approved for ${updatedPlan.productName}.`);
+      setNotice({ tone: "success", message: `${prettyReviewStage(stage)} approved for ${updatedPlan.productName}.` });
+    } catch (error) {
+      handleWorkspaceError(error, `Unable to approve ${prettyReviewStage(stage)}.`);
+    }
+  }
+
+  function togglePlanningOnboardingTask(taskId) {
+    if (!selectedPlan) {
+      return;
+    }
+
+    try {
+      const updatedPlan = completeOnboardingTask(selectedPlan, taskId, {
+        completedAt: new Date().toISOString()
+      });
+      setWorkspaceHub({
+        ...workspaceHub,
+        plans: workspaceHub.plans.map((plan) => (plan.id === updatedPlan.id ? updatedPlan : plan))
+      });
+      setWorkspaceHubStatus("Updated onboarding checklist progress.");
+    } catch (error) {
+      handleWorkspaceError(error, "Unable to update the onboarding checklist.");
+    }
+  }
+
+  async function submitRefinementStory(event) {
+    event.preventDefault();
+
+    try {
+      const payload = {
+        notes: refinementForm.notes,
+        candidateProblemStatement: refinementForm.candidateProblemStatement,
+        candidateStorySummary: refinementForm.candidateStorySummary,
+        parentEpicLink: refinementForm.parentEpicLink,
+        labels: splitCommaValues(refinementForm.labels),
+        sprint: refinementForm.sprint,
+        estimatePoints: refinementForm.estimatePoints && Number.isFinite(Number.parseInt(refinementForm.estimatePoints, 10))
+          ? Number.parseInt(refinementForm.estimatePoints, 10)
+          : null,
+        references: splitMultiline(refinementForm.references),
+        teamContext: refinementForm.teamContext
+      };
+
+      const refinement = planningMode === "live"
+        ? await fetchJson("/api/refinement/stories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        : createRefinementStoryPackage(payload);
+
+      setWorkspaceHub((current) => ({ ...current, refinement }));
+      setTestCaseForm((current) => ({
+        ...current,
+        storySummary: refinement.storySummary,
+        acceptanceCriteria: refinement.acceptanceCriteria.join("\n"),
+        storyTitle: selectedPlan?.productName || current.storyTitle
+      }));
+      setWorkspaceHubStatus("Refinement story package generated.");
+    } catch (error) {
+      handleWorkspaceError(error, "Unable to generate the refinement story.");
+    }
+  }
+
+  async function submitGeneratedTestCases(event) {
+    event.preventDefault();
+
+    try {
+      const payload = {
+        storySummary: testCaseForm.storySummary,
+        acceptanceCriteria: splitMultiline(testCaseForm.acceptanceCriteria),
+        storyTitle: testCaseForm.storyTitle || selectedPlan?.productName,
+        environment: testCaseForm.environment
+      };
+      const testCases = planningMode === "live"
+        ? await fetchJson("/api/test-cases", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        : generateTestCases(payload);
+
+      setWorkspaceHub((current) => ({ ...current, testCases }));
+      setWorkspaceHubStatus("QE test cases generated.");
+    } catch (error) {
+      handleWorkspaceError(error, "Unable to generate test cases.");
+    }
+  }
+
+  async function submitOnboardingQuestion(event) {
+    event.preventDefault();
+
+    try {
+      const payload = {
+        role: onboardingForm.role,
+        journeyType: onboardingForm.journeyType,
+        question: onboardingForm.question
+      };
+      const onboarding = planningMode === "live"
+        ? await fetchJson("/api/onboarding/query", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        : answerOnboardingQuery(payload, workspaceHub.onboardingDocuments);
+
+      setWorkspaceHub((current) => ({ ...current, onboarding }));
+      setWorkspaceHubStatus("Onboarding guidance updated.");
+    } catch (error) {
+      handleWorkspaceError(error, "Unable to answer the onboarding question.");
+    }
   }
 
   async function selectScan(id, availableScans = scans, options = {}) {
@@ -384,11 +693,11 @@ export default function App() {
     event.preventDefault();
     try {
       const payload = {
-        path: archiveForm.sourceFilename,
+        sourceFilename: archiveForm.sourceFilename,
         displayName: archiveForm.displayName,
         requestedBy: archiveForm.requestedBy
       };
-      const response = createMockPathScan(payload);
+      const response = createMockArchiveScan(payload);
       upsertScan(response);
       setArchiveForm(EMPTY_ARCHIVE_FORM);
       setNotice({ tone: "success", message: `Loaded sample folder ${response.displayName}.` });
@@ -442,6 +751,15 @@ export default function App() {
   function handleUiError(error) {
     console.error(error);
     setNotice({ tone: "danger", message: error?.message || "The UI hit an unexpected error." });
+  }
+
+  function handleWorkspaceError(error, fallbackMessage) {
+    console.error(error);
+    const message = error instanceof PlanningError
+      ? error.message
+      : error?.message || fallbackMessage;
+    setWorkspaceHubStatus(message);
+    setNotice({ tone: "danger", message });
   }
 
   async function handleCopy(label, payload) {
@@ -695,8 +1013,10 @@ export default function App() {
               <p style={STYLES.eyebrow}>Modernize Minds</p>
               <h1 style={STYLES.title}>Modernize Application Accelerator</h1>
             </div>
-            <p style={STYLES.subtitle}>A cleaner workspace for quick stack discovery, sample-project selection, short modernization reporting, and deeper planning across multiple technology stacks.</p>
+            <p style={STYLES.subtitle}>A cleaner workspace for quick stack discovery, sample-project folders and path scans, short modernization reporting, and the new planning hub for refinement, QE, and onboarding.</p>
             <div style={STYLES.chipRow}>
+              <span className="pill info">Static demo mode</span>
+              <span className="pill info">{workspaceHubStatus}</span>
               <span className="pill primary">{selectedScan ? `Selected: ${selectedScan.displayName}` : "No scan selected"}</span>
               <span className="pill">{selectedScan ? formatSelectedSource(selectedScan.sourceType) : "Sample project folder"}</span>
             </div>
@@ -704,7 +1024,7 @@ export default function App() {
           <section id="api-reference" style={STYLES.brand}>
             <p style={STYLES.eyebrow}>Workspace snapshot</p>
             <h2 style={{ margin: 0 }}>Included flows</h2>
-            <p style={STYLES.subtitle}>Sample-folder dropdowns, manual path scans, quick analysis, target selection, documentation, roadmap, and help all live in one workspace.</p>
+            <p style={STYLES.subtitle}>Sample-folder loading, manual path scans, quick analysis, scan registry, selected reports, documentation, roadmap, the planning hub, and help all live in one workspace.</p>
             <div style={STYLES.threeCol}>
               <MetricCard label="Total scans" value={summary.totalScans} />
               <MetricCard label="Complete" value={summary.completeScans} />
@@ -716,7 +1036,7 @@ export default function App() {
         <nav aria-label="Workspace sections" style={STYLES.navBar}>
           {NAV_ITEMS.map((item) => (
             (() => {
-              const locked = !deepAnalysisReady && !["home", "help"].includes(item.id);
+              const locked = !deepAnalysisReady && !["home", "help", "planning"].includes(item.id);
               return (
             <button
               key={item.id}
@@ -750,6 +1070,9 @@ export default function App() {
             <div className="actions-row">
               <button type="button" className="secondary" onClick={() => setDrawerOpen((current) => !current)} disabled={!selectedScan}>
                 {drawerOpen ? "Hide selected scan" : "Open selected scan"}
+              </button>
+              <button type="button" className="secondary" onClick={() => setActivePage("planning")}>
+                Open planning hub
               </button>
               <span className="muted-line">{selectedScan ? formatDate(selectedScan.updatedAt || selectedScan.createdAt) : "No scan loaded yet"}</span>
             </div>
@@ -814,6 +1137,17 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+              </section>
+              <section id="scan-filters">
+                <h4>Filter controls</h4>
+                <form id="scan-filter-form">
+                  <Field label="Search"><input type="search" value={scanFilters.search} onChange={(event) => setScanFilters({ ...scanFilters, search: event.target.value })} placeholder="Search scans, paths, or reports" /></Field>
+                  <Field label="Status"><select value={scanFilters.status} onChange={(event) => setScanFilters({ ...scanFilters, status: event.target.value })}><option value="">Any status</option><option value="pending">Pending</option><option value="running">Running</option><option value="complete">Complete</option><option value="failed">Failed</option></select></Field>
+                  <Field label="Source"><select value={scanFilters.source} onChange={(event) => setScanFilters({ ...scanFilters, source: event.target.value })}><option value="">Any source</option><option value="archive">Sample folder</option><option value="path">Local path</option></select></Field>
+                  <Field label="Requested by"><input value={scanFilters.requestedBy} onChange={(event) => setScanFilters({ ...scanFilters, requestedBy: event.target.value })} placeholder="ui" /></Field>
+                  <Field label="Sort"><select value={scanFilters.sort} onChange={(event) => setScanFilters({ ...scanFilters, sort: event.target.value })}><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name</option><option value="status">Status</option></select></Field>
+                  <div className="actions-row"><button type="button" onClick={() => setScanFilters(DEFAULT_SCAN_FILTERS)}>Reset filters</button></div>
+                </form>
               </section>
 
               {quickReport ? (
@@ -1122,6 +1456,47 @@ export default function App() {
             </section>
           )}
 
+          {activePage === "planning" && (
+            <PlanningHubPanel
+              mode={planningMode}
+              plans={workspaceHub.plans}
+              selectedPlan={selectedPlan}
+              selectedPlanSummary={selectedPlanSummary}
+              refinement={workspaceHub.refinement}
+              testCases={workspaceHub.testCases}
+              onboarding={workspaceHub.onboarding}
+              planningSummary={planningSummary}
+              refinementSummary={refinementSummary}
+              testCaseSummary={testCaseSummary}
+              onboardingSummary={onboardingSummary}
+              visionForm={visionForm}
+              reviewForm={reviewForm}
+              refinementForm={refinementForm}
+              testCaseForm={testCaseForm}
+              onboardingForm={onboardingForm}
+              setVisionForm={setVisionForm}
+              setReviewForm={setReviewForm}
+              setRefinementForm={setRefinementForm}
+              setTestCaseForm={setTestCaseForm}
+              setOnboardingForm={setOnboardingForm}
+              status={workspaceHubStatus}
+              onSelectPlan={selectWorkspacePlan}
+              onCreatePlan={(event) => void submitVisionPlan(event)}
+              onApproveEpicReview={() => void submitPlanReviewApproval(REVIEW_STAGES.EPICS)}
+              onApproveFeatureReview={() => void submitPlanReviewApproval(REVIEW_STAGES.FEATURES)}
+              onToggleOnboardingTask={togglePlanningOnboardingTask}
+              onGenerateRefinement={(event) => void submitRefinementStory(event)}
+              onGenerateTestCases={(event) => void submitGeneratedTestCases(event)}
+              onAskOnboarding={(event) => void submitOnboardingQuestion(event)}
+              onCopy={handleCopy}
+              onExport={handleExport}
+              onRefresh={() => loadWorkspaceHub().catch((error) => {
+                console.warn(error);
+                setWorkspaceHubStatus("Using built-in planning workspace fallback.");
+              })}
+            />
+          )}
+
           {activePage === "help" && (
             <section className="card">
               <div className="card-body stack">
@@ -1193,6 +1568,487 @@ export default function App() {
         </section>
       </aside>
     </>
+  );
+}
+
+function PlanningHubPanel({
+  mode,
+  plans,
+  selectedPlan,
+  selectedPlanSummary,
+  refinement,
+  testCases,
+  onboarding,
+  planningSummary,
+  refinementSummary,
+  testCaseSummary,
+  onboardingSummary,
+  visionForm,
+  reviewForm,
+  refinementForm,
+  testCaseForm,
+  onboardingForm,
+  setVisionForm,
+  setReviewForm,
+  setRefinementForm,
+  setTestCaseForm,
+  setOnboardingForm,
+  status,
+  onSelectPlan,
+  onCreatePlan,
+  onApproveEpicReview,
+  onApproveFeatureReview,
+  onToggleOnboardingTask,
+  onGenerateRefinement,
+  onGenerateTestCases,
+  onAskOnboarding,
+  onCopy,
+  onExport,
+  onRefresh
+}) {
+  const [selectedSuiteIndex, setSelectedSuiteIndex] = useState(0);
+  const onboardingFirstInteraction = onboarding?.firstInteraction?.length > 0
+    ? onboarding.firstInteraction
+    : [
+      "What is your role?",
+      "Is this your first week, or do you have a specific question?"
+    ];
+
+  useEffect(() => {
+    setSelectedSuiteIndex(0);
+  }, [testCases]);
+
+  const selectedSuite = testCases?.testSuites?.[selectedSuiteIndex] || testCases?.testSuites?.[0] || null;
+
+  return (
+    <section className="card" id="planning-hub">
+      <div className="card-body stack">
+        <div style={STYLES.planningHero}>
+          <div className="stack">
+            <p className="muted-line">Agile delivery workspace</p>
+            <h2 style={{ margin: 0 }}>Planning, refinement, QE, and onboarding live here</h2>
+            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.65 }}>
+              The planning hub now runs the end-to-end flow: vision intake, epic review, feature review, sprint-ready story generation, QE coverage generation, and document-grounded onboarding support.
+            </p>
+            <div className="actions-row">
+              <span className="pill info">{mode === "live" ? "Live submit mode" : "Mock fixture mode"}</span>
+              <span className="pill primary">{status}</span>
+            </div>
+            <div className="actions-row">
+              <button type="button" onClick={() => void onRefresh()}>Refresh planning workspace</button>
+              <button type="button" className="secondary" onClick={() => void onCopy("planning-workspace", { plans, refinement, testCases, onboarding })}>Copy workspace JSON</button>
+              <button type="button" className="secondary" onClick={() => void onExport("planning-workspace", { plans, refinement, testCases, onboarding })}>Export workspace JSON</button>
+            </div>
+          </div>
+          <div className="stack">
+            <div style={STYLES.planningCallout}>
+              <p className="muted-line">Workspace summary</p>
+              <div style={STYLES.planningMiniGrid}>
+                <SummaryCard label="Plans" value={planningSummary.totalPlans} />
+                <SummaryCard label="Epic review" value={planningSummary.epicReviewPlans} />
+                <SummaryCard label="Feature review" value={planningSummary.featureReviewPlans} />
+                <SummaryCard label="Story ready" value={planningSummary.storyReadyPlans} />
+              </div>
+            </div>
+            <div className="table-wrap">
+              <table style={STYLES.planningTable}>
+                <tbody>
+                  <tr><td><strong>Refinement criteria</strong></td><td>{refinementSummary.acceptanceCriteria}</td></tr>
+                  <tr><td><strong>QE suites</strong></td><td>{testCases.testSuites?.length || 0} suites, {testCaseSummary.totalTestCases} cases</td></tr>
+                  <tr><td><strong>Onboarding citations</strong></td><td>{onboardingSummary.citedDocuments} cited documents</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div style={STYLES.planningGrid}>
+          <article className="card" style={STYLES.planningSurface}>
+            <div className="card-body stack">
+              <div style={STYLES.cardHeader}>
+                <div>
+                  <p className="muted-line">1. Vision intake</p>
+                  <h3 style={{ margin: 0 }}>Create a new planning workflow</h3>
+                </div>
+              </div>
+              <form onSubmit={onCreatePlan}>
+                <div style={STYLES.formGrid}>
+                  <Field label="Product name">
+                    <input value={visionForm.productName} onChange={(event) => setVisionForm({ ...visionForm, productName: event.target.value })} placeholder="Migration Helper Planning" />
+                  </Field>
+                  <Field label="Program lead">
+                    <input value={visionForm.programLead} onChange={(event) => setVisionForm({ ...visionForm, programLead: event.target.value })} placeholder="Program Lead" required />
+                  </Field>
+                  <Field label="Target users">
+                    <input value={visionForm.targetUsers} onChange={(event) => setVisionForm({ ...visionForm, targetUsers: event.target.value })} placeholder="Program leads, agile facilitators, QE engineers" />
+                  </Field>
+                  <Field label="Desired outcomes">
+                    <textarea value={visionForm.desiredOutcomes} onChange={(event) => setVisionForm({ ...visionForm, desiredOutcomes: event.target.value })} rows={4} placeholder="One outcome per line" />
+                  </Field>
+                </div>
+                <Field label="Vision statement">
+                  <textarea value={visionForm.vision} onChange={(event) => setVisionForm({ ...visionForm, vision: event.target.value })} rows={5} placeholder="Describe the program lead vision that should be broken into reviewed epics, features, and stories." required />
+                </Field>
+                <div className="actions-row">
+                  <button type="submit">Create plan</button>
+                  <button type="button" className="secondary" onClick={() => setVisionForm(EMPTY_VISION_FORM)}>Clear</button>
+                </div>
+              </form>
+              <div className="table-wrap">
+                <table>
+                  <thead><tr><th>Plan</th><th>Stage</th><th>Counts</th><th>Actions</th></tr></thead>
+                  <tbody>
+                    {plans.length > 0 ? plans.map((plan) => {
+                      const summary = getPlanSummary(plan);
+                      return (
+                        <tr key={plan.id} className={selectedPlan?.id === plan.id ? "row-selected" : ""}>
+                          <td><strong>{plan.productName}</strong><span className="muted-line">{plan.id}</span></td>
+                          <td><span className={`pill ${planningStageTone(plan.currentStage)}`}>{prettyPlanStage(plan.currentStage)}</span></td>
+                          <td>{summary.counts.epics} epics / {summary.counts.features} features / {summary.counts.stories} stories</td>
+                          <td><button type="button" className="secondary" onClick={() => onSelectPlan(plan.id)}>Open</button></td>
+                        </tr>
+                      );
+                    }) : <tr><td colSpan="4">No plans are loaded yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <article className="card" style={STYLES.planningSurface}>
+            <div className="card-body stack">
+              <div style={STYLES.cardHeader}>
+                <div>
+                  <p className="muted-line">2. Review gates and backlog</p>
+                  <h3 style={{ margin: 0 }}>{selectedPlan ? selectedPlan.productName : "Select a plan"}</h3>
+                </div>
+                <span className={`pill ${planningStageTone(selectedPlan?.currentStage)}`}>{selectedPlan ? prettyPlanStage(selectedPlan.currentStage) : "No selection"}</span>
+              </div>
+              {selectedPlan ? (
+                <>
+                  <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>{selectedPlan.vision}</p>
+                  <div style={STYLES.planningMiniGrid}>
+                    <SummaryCard label="Epics" value={selectedPlanSummary?.counts.epics || 0} />
+                    <SummaryCard label="Features" value={selectedPlanSummary?.counts.features || 0} />
+                    <SummaryCard label="Stories" value={selectedPlanSummary?.counts.stories || 0} />
+                    <SummaryCard label="Onboarding ready" value={selectedPlanSummary?.onboarding.ready || 0} />
+                  </div>
+                  <div style={STYLES.planningCallout}>
+                    <strong>Desired outcomes</strong>
+                    <ul style={STYLES.planningList}>
+                      {selectedPlan.desiredOutcomes.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </div>
+                  <div style={STYLES.formGrid}>
+                    <Field label="Reviewer">
+                      <input value={reviewForm.reviewer} onChange={(event) => setReviewForm({ ...reviewForm, reviewer: event.target.value })} placeholder="Reviewer name" />
+                    </Field>
+                    <Field label="Review notes">
+                      <textarea value={reviewForm.notes} onChange={(event) => setReviewForm({ ...reviewForm, notes: event.target.value })} rows={3} placeholder="Optional approval notes" />
+                    </Field>
+                  </div>
+                  <div className="actions-row">
+                    <button type="button" onClick={onApproveEpicReview} disabled={!selectedPlanSummary?.stageSummary.canApproveEpicReview}>Approve epic review</button>
+                    <button type="button" onClick={onApproveFeatureReview} disabled={!selectedPlanSummary?.stageSummary.canApproveFeatureReview}>Approve feature review</button>
+                  </div>
+                  <div className="table-wrap">
+                    <table>
+                      <thead><tr><th>Review stage</th><th>Status</th><th>Reviewer</th><th>Notes</th></tr></thead>
+                      <tbody>
+                        {selectedPlan.reviewCheckpoints.map((checkpoint) => (
+                          <tr key={checkpoint.stage}>
+                            <td>{prettyReviewStage(checkpoint.stage)}</td>
+                            <td>{checkpoint.status}</td>
+                            <td>{checkpoint.reviewer || "Unassigned"}</td>
+                            <td>{checkpoint.notes || "No notes"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="table-wrap">
+                    <table>
+                      <thead><tr><th>Epics</th><th>Owner</th><th>Status</th></tr></thead>
+                      <tbody>
+                        {selectedPlan.epics.map((item) => (
+                          <tr key={item.id}>
+                            <td><strong>{item.title}</strong><span className="muted-line">{item.summary}</span></td>
+                            <td>{item.owner}</td>
+                            <td>{item.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="table-wrap">
+                    <table>
+                      <thead><tr><th>Features</th><th>Owner</th><th>Status</th></tr></thead>
+                      <tbody>
+                        {selectedPlan.features.length > 0 ? selectedPlan.features.map((item) => (
+                          <tr key={item.id}>
+                            <td><strong>{item.title}</strong><span className="muted-line">{item.summary}</span></td>
+                            <td>{item.owner}</td>
+                            <td>{item.status}</td>
+                          </tr>
+                        )) : <tr><td colSpan="3">Features unlock after epic review approval.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="table-wrap">
+                    <table>
+                      <thead><tr><th>Stories</th><th>Owner</th><th>Status</th></tr></thead>
+                      <tbody>
+                        {selectedPlan.stories.length > 0 ? selectedPlan.stories.map((item) => (
+                          <tr key={item.id}>
+                            <td><strong>{item.title}</strong><span className="muted-line">{item.summary}</span></td>
+                            <td>{item.owner}</td>
+                            <td>{item.status}</td>
+                          </tr>
+                        )) : <tr><td colSpan="3">Stories unlock after feature review approval.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={STYLES.planningCallout}>
+                    <strong>Onboarding checklist progression</strong>
+                    <ul style={STYLES.planningList}>
+                      {selectedPlan.onboardingChecklist.map((task) => (
+                        <li key={task.id}>
+                          <strong>{task.title}</strong> - {task.status}. {task.detail}
+                          {task.status !== "COMPLETE" && (
+                            <button type="button" className="secondary" style={{ marginLeft: 10 }} onClick={() => onToggleOnboardingTask(task.id)} disabled={task.status !== "READY"}>
+                              Mark complete
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <div style={STYLES.empty}><div><h3>No plan selected</h3><p>Choose a plan from the list or create a new one to start the workflow.</p></div></div>
+              )}
+            </div>
+          </article>
+
+          <article className="card" style={STYLES.planningSurface}>
+            <div className="card-body stack">
+              <div style={STYLES.cardHeader}>
+                <div>
+                  <p className="muted-line">3. Refinement facilitation</p>
+                  <h3 style={{ margin: 0 }}>Turn messy notes into a sprint-ready story</h3>
+                </div>
+                <span className="pill info">{refinement.estimation}</span>
+              </div>
+              <form onSubmit={onGenerateRefinement}>
+                <Field label="Refinement notes">
+                  <textarea value={refinementForm.notes} onChange={(event) => setRefinementForm({ ...refinementForm, notes: event.target.value })} rows={6} placeholder="Paste messy notes, discussion summaries, or verbal descriptions from backlog refinement." />
+                </Field>
+                <div style={STYLES.formGrid}>
+                  <Field label="Candidate problem statement">
+                    <textarea value={refinementForm.candidateProblemStatement} onChange={(event) => setRefinementForm({ ...refinementForm, candidateProblemStatement: event.target.value })} rows={3} placeholder="Optional problem statement to preserve or validate." />
+                  </Field>
+                  <Field label="Candidate story summary">
+                    <textarea value={refinementForm.candidateStorySummary} onChange={(event) => setRefinementForm({ ...refinementForm, candidateStorySummary: event.target.value })} rows={3} placeholder="Optional As a / I want / so that I can summary." />
+                  </Field>
+                  <Field label="Parent epic link">
+                    <input value={refinementForm.parentEpicLink} onChange={(event) => setRefinementForm({ ...refinementForm, parentEpicLink: event.target.value })} placeholder="plan-xxx-E1" />
+                  </Field>
+                  <Field label="Labels">
+                    <input value={refinementForm.labels} onChange={(event) => setRefinementForm({ ...refinementForm, labels: event.target.value })} placeholder="refinement, ready" />
+                  </Field>
+                  <Field label="Sprint">
+                    <input value={refinementForm.sprint} onChange={(event) => setRefinementForm({ ...refinementForm, sprint: event.target.value })} placeholder="Sprint 14" />
+                  </Field>
+                  <Field label="Estimate points">
+                    <input type="number" min="0" value={refinementForm.estimatePoints} onChange={(event) => setRefinementForm({ ...refinementForm, estimatePoints: event.target.value })} placeholder="3" />
+                  </Field>
+                  <Field label="References">
+                    <textarea value={refinementForm.references} onChange={(event) => setRefinementForm({ ...refinementForm, references: event.target.value })} rows={3} placeholder="One reference per line" />
+                  </Field>
+                  <Field label="Team context">
+                    <textarea value={refinementForm.teamContext} onChange={(event) => setRefinementForm({ ...refinementForm, teamContext: event.target.value })} rows={3} placeholder="Agile facilitator, QE lead, program lead..." />
+                  </Field>
+                </div>
+                <div className="actions-row">
+                  <button type="submit">Generate story package</button>
+                  <button type="button" className="secondary" onClick={() => setRefinementForm(EMPTY_REFINEMENT_FORM)}>Clear</button>
+                  <button type="button" className="secondary" onClick={() => void onCopy("refinement-story", refinement)}>Copy result</button>
+                </div>
+              </form>
+              <div style={STYLES.planningCallout}>
+                <strong>Problem Statement</strong>
+                <p style={{ margin: "8px 0 0", color: "var(--muted)", lineHeight: 1.6 }}>{refinement.problemStatement}</p>
+              </div>
+              <div style={STYLES.planningCallout}>
+                <strong>Story Summary</strong>
+                <p style={{ margin: "8px 0 0", lineHeight: 1.6 }}>{refinement.storySummary}</p>
+              </div>
+              <div style={STYLES.planningMiniGrid}>
+                <SummaryCard label="Acceptance criteria" value={refinementSummary.acceptanceCriteria} />
+                <SummaryCard label="Dependencies" value={refinementSummary.dependencies} />
+                <SummaryCard label="References" value={refinementSummary.references} />
+                <SummaryCard label="Gaps" value={refinementSummary.gaps} />
+              </div>
+              <WorkspaceList title="Acceptance Criteria" items={refinement.acceptanceCriteria || []} />
+              <WorkspaceList title="Dependencies" items={refinement.dependencies || []} />
+              <WorkspaceList title="References" items={refinement.references || []} />
+              <WorkspaceList title="Definition Of Ready Validation" items={refinement.definitionOfReadyValidation || []} />
+              <WorkspaceList title="Gaps" items={refinement.gaps || []} />
+              <WorkspaceList title="Normalization Notes" items={refinement.normalizationNotes || []} />
+            </div>
+          </article>
+
+          <article className="card" style={STYLES.planningSurface}>
+            <div className="card-body stack">
+              <div style={STYLES.cardHeader}>
+                <div>
+                  <p className="muted-line">4. Test case generator</p>
+                  <h3 style={{ margin: 0 }}>Acceptance criteria to execution-ready suites</h3>
+                </div>
+                <span className="pill info">{testCaseSummary.totalTestCases} cases</span>
+              </div>
+              <form onSubmit={onGenerateTestCases}>
+                <div style={STYLES.formGrid}>
+                  <Field label="Story title">
+                    <input value={testCaseForm.storyTitle} onChange={(event) => setTestCaseForm({ ...testCaseForm, storyTitle: event.target.value })} placeholder="Refinement facilitation" />
+                  </Field>
+                  <Field label="Environment">
+                    <input value={testCaseForm.environment} onChange={(event) => setTestCaseForm({ ...testCaseForm, environment: event.target.value })} placeholder="mock" />
+                  </Field>
+                </div>
+                <Field label="Story summary">
+                  <textarea value={testCaseForm.storySummary} onChange={(event) => setTestCaseForm({ ...testCaseForm, storySummary: event.target.value })} rows={3} placeholder="As a ..., I want to ..., so that I can ..." />
+                </Field>
+                <Field label="Acceptance criteria">
+                  <textarea value={testCaseForm.acceptanceCriteria} onChange={(event) => setTestCaseForm({ ...testCaseForm, acceptanceCriteria: event.target.value })} rows={6} placeholder="One acceptance criterion per line" />
+                </Field>
+                <div className="actions-row">
+                  <button type="submit">Generate test cases</button>
+                  <button type="button" className="secondary" onClick={() => setTestCaseForm(EMPTY_TEST_CASE_FORM)}>Clear</button>
+                  <button type="button" className="secondary" onClick={() => void onCopy("test-cases", testCases)}>Copy bundle</button>
+                </div>
+              </form>
+              <div style={STYLES.planningMiniGrid}>
+                <SummaryCard label="Positive" value={testCaseSummary.positiveCases} />
+                <SummaryCard label="Negative" value={testCaseSummary.negativeCases} />
+                <SummaryCard label="Edge cases" value={testCaseSummary.edgeCases} />
+                <SummaryCard label="Untestable" value={testCases.summary?.untestableCriteria || 0} />
+              </div>
+              <div className="actions-row">
+                {(testCases.testSuites || []).map((suite, index) => (
+                  <button key={suite.suiteName} type="button" className="secondary" onClick={() => setSelectedSuiteIndex(index)}>
+                    {suite.suiteName}
+                  </button>
+                ))}
+              </div>
+              {selectedSuite ? (
+                <>
+                  <div style={STYLES.planningCallout}>
+                    <strong>{selectedSuite.suiteName}</strong>
+                    <p style={{ margin: "8px 0 0", lineHeight: 1.6 }}>{selectedSuite.acceptanceCriterion}</p>
+                    {selectedSuite.untestable && (
+                      <p style={{ margin: "8px 0 0", color: "var(--danger)" }}>
+                        {"\u26A0\uFE0F UNTESTABLE:"} {selectedSuite.untestableReason} Suggestion: {selectedSuite.rewriteSuggestion}
+                      </p>
+                    )}
+                  </div>
+                  <div className="table-wrap">
+                    <table>
+                      <thead><tr><th>Test case</th><th>Priority</th><th>Type</th><th>Expected result</th></tr></thead>
+                      <tbody>
+                        {selectedSuite.testCases?.length > 0 ? selectedSuite.testCases.map((testCase) => (
+                          <tr key={testCase.id}>
+                            <td><strong>{testCase.id}</strong><span className="muted-line">{testCase.testData}</span></td>
+                            <td>{testCase.priority}</td>
+                            <td>{testCase.type}</td>
+                            <td>{testCase.expectedResult}</td>
+                          </tr>
+                        )) : <tr><td colSpan="4">No test cases loaded.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : null}
+              <div className="planning-list">
+                <strong>Coverage gaps</strong>
+                <ul style={STYLES.planningList}>
+                  {(testCases.summary?.gaps || []).map((gap) => <li key={gap}>{gap}</li>)}
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          <article className="card" style={STYLES.planningSurface}>
+            <div className="card-body stack">
+              <div style={STYLES.cardHeader}>
+                <div>
+                  <p className="muted-line">5. Confluence-grounded onboarding agent</p>
+                  <h3 style={{ margin: 0 }}>{onboarding.agentName || DEFAULT_ONBOARDING_AGENT_NAME}</h3>
+                </div>
+                <span className="pill info">{onboardingSummary.citedDocuments} cited docs</span>
+              </div>
+              <form onSubmit={onAskOnboarding}>
+                <div style={STYLES.formGrid}>
+                  <Field label="Role">
+                    <input value={onboardingForm.role} onChange={(event) => setOnboardingForm({ ...onboardingForm, role: event.target.value })} placeholder="Developer" />
+                  </Field>
+                  <Field label="Journey">
+                    <select value={onboardingForm.journeyType} onChange={(event) => setOnboardingForm({ ...onboardingForm, journeyType: event.target.value })}>
+                      <option value="">Select a journey</option>
+                      <option value={ONBOARDING_JOURNEY_TYPES.FIRST_WEEK}>First week</option>
+                      <option value={ONBOARDING_JOURNEY_TYPES.SPECIFIC_QUESTION}>Specific question</option>
+                    </select>
+                  </Field>
+                </div>
+                <Field label="Question">
+                  <textarea value={onboardingForm.question} onChange={(event) => setOnboardingForm({ ...onboardingForm, question: event.target.value })} rows={3} placeholder="How do I set up my dev environment?" />
+                </Field>
+                <div className="actions-row">
+                  <button type="submit">Ask onboarding agent</button>
+                  <button type="button" className="secondary" onClick={() => setOnboardingForm(EMPTY_ONBOARDING_FORM)}>Clear</button>
+                  <button type="button" className="secondary" onClick={() => void onCopy("onboarding-response", onboarding)}>Copy answer</button>
+                </div>
+              </form>
+              <div style={STYLES.planningCallout}>
+                <strong>First interaction</strong>
+                <ul style={STYLES.planningList}>
+                  {onboardingFirstInteraction.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </div>
+              <div style={STYLES.planningCallout}>
+                <strong>Answer</strong>
+                <p style={{ margin: "8px 0", lineHeight: 1.6 }}>{onboarding.answer || "Ask a question to get started."}</p>
+              </div>
+              <WorkspaceList
+                title="Cited Documents"
+                items={(onboarding.citedDocuments || []).map((doc) => `${doc.documentName}${doc.section ? ` - ${doc.section}` : ""}${doc.outdated ? " (outdated)" : ""}`)}
+              />
+              <WorkspaceList title="Warnings" items={onboarding.warnings || []} />
+              <WorkspaceList title="Next Questions" items={onboarding.nextQuestions || []} />
+              <div className="table-wrap">
+                <table>
+                  <tbody>
+                    <tr><td><strong>Suggested escalation</strong></td><td>{onboarding.suggestedEscalation || "None"}</td></tr>
+                    <tr><td><strong>Fallback rule</strong></td><td>I couldn't find this in our documentation. You may want to ask the most likely team lead or support channel.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WorkspaceList({ title, items }) {
+  return (
+    <div>
+      <strong>{title}</strong>
+      <ul style={STYLES.planningList}>
+        {(items || []).length > 0 ? items.map((item) => <li key={item}>{item}</li>) : <li>None</li>}
+      </ul>
+    </div>
   );
 }
 
@@ -1518,4 +2374,235 @@ function slugify(value) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function prettyPlanStage(stage) {
+  if (stage === PLANNING_STAGES.EPIC_REVIEW) {
+    return "Epic review";
+  }
+  if (stage === PLANNING_STAGES.FEATURE_REVIEW) {
+    return "Feature review";
+  }
+  if (stage === PLANNING_STAGES.STORY_READY) {
+    return "Story ready";
+  }
+  return stage || "Draft";
+}
+
+function planningStageTone(stage) {
+  if (stage === PLANNING_STAGES.STORY_READY) {
+    return "success";
+  }
+  if (stage === PLANNING_STAGES.FEATURE_REVIEW) {
+    return "warning";
+  }
+  return "info";
+}
+
+function prettyReviewStage(stage) {
+  if (stage === REVIEW_STAGES.EPICS) {
+    return "Epic review";
+  }
+  if (stage === REVIEW_STAGES.FEATURES) {
+    return "Feature review";
+  }
+  return String(stage || "Review");
+}
+
+function summarizePlanCollection(plans) {
+  return {
+    totalPlans: plans.length,
+    epicReviewPlans: plans.filter((plan) => plan.currentStage === PLANNING_STAGES.EPIC_REVIEW).length,
+    featureReviewPlans: plans.filter((plan) => plan.currentStage === PLANNING_STAGES.FEATURE_REVIEW).length,
+    storyReadyPlans: plans.filter((plan) => plan.currentStage === PLANNING_STAGES.STORY_READY).length
+  };
+}
+
+function summarizeRefinementPreview(refinement) {
+  return {
+    acceptanceCriteria: Array.isArray(refinement?.acceptanceCriteria) ? refinement.acceptanceCriteria.length : 0,
+    dependencies: Array.isArray(refinement?.dependencies) ? refinement.dependencies.length : 0,
+    references: Array.isArray(refinement?.references) ? refinement.references.length : 0,
+    gaps: Array.isArray(refinement?.gaps) ? refinement.gaps.length : 0
+  };
+}
+
+function summarizeTestCasePreview(testCases) {
+  return {
+    totalTestCases: testCases?.summary?.totalTestCases || 0,
+    positiveCases: testCases?.summary?.positiveCases || 0,
+    negativeCases: testCases?.summary?.negativeCases || 0,
+    edgeCases: testCases?.summary?.edgeCases || 0
+  };
+}
+
+function summarizeOnboardingPreview(onboarding) {
+  return {
+    citedDocuments: Array.isArray(onboarding?.citedDocuments) ? onboarding.citedDocuments.length : 0
+  };
+}
+
+function splitCommaValues(value) {
+  return String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function splitMultiline(value) {
+  return String(value || "").split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+}
+
+function createPlanningWorkspaceFallback() {
+  const firstPlan = createPlan(PLANNING_SEED_VISION);
+  const secondPlan = approveReview(
+    createPlan(
+      {
+        ...PLANNING_SEED_VISION,
+        productName: "Refinement Workspace",
+        programLead: "Delivery Lead",
+        targetUsers: "Agile facilitators and product owners",
+        desiredOutcomes: [
+          "Reduce back-and-forth during backlog refinement",
+          "Expose review gates before sprint commitment",
+          "Make acceptance criteria easier to test"
+        ]
+      },
+      {
+        createdAt: "2026-04-16T10:00:00.000Z",
+        updatedAt: "2026-04-16T10:00:00.000Z",
+        id: "plan-feature-ready"
+      }
+    ),
+    REVIEW_STAGES.EPICS,
+    {
+      reviewer: "Delivery Lead",
+      notes: "Approved for feature decomposition."
+    },
+    {
+      reviewedAt: "2026-04-16T10:15:00.000Z"
+    }
+  );
+  const refinement = createRefinementStoryPackage(
+    buildRefinementSampleRequest({
+      parentEpicLink: `${secondPlan.id}-E1`
+    })
+  );
+  const testCases = generateTestCases(
+    buildTestCaseGenerationRequest({
+      storySummary: refinement.storySummary,
+      acceptanceCriteria: refinement.acceptanceCriteria,
+      storyTitle: secondPlan.productName
+    })
+  );
+  const onboardingDocuments = [];
+  const onboarding = {
+    agentName: DEFAULT_ONBOARDING_AGENT_NAME,
+    firstInteraction: [
+      "What is your role?",
+      "Is this your first week, or do you have a specific question?"
+    ],
+    answer: "Ask a role and onboarding-stage question to get started.",
+    citedDocuments: [],
+    warnings: [],
+    nextQuestions: [],
+    suggestedEscalation: null
+  };
+
+  return {
+    plans: [secondPlan, firstPlan],
+    selectedPlanId: secondPlan.id,
+    refinement,
+    testCases,
+    onboarding,
+    onboardingDocuments
+  };
+}
+
+async function loadMockPlanningWorkspace() {
+  const fallback = createPlanningWorkspaceFallback();
+  const [planListResult, planDetailResult, refinementResult, testCaseResult, onboardingResult, documentsResult] = await Promise.allSettled([
+    fetchJson("./mock-data/plans/list.json"),
+    fetchJson("./mock-data/plans/detail.json"),
+    fetchJson("./mock-data/refinement/story.json"),
+    fetchJson("./mock-data/test-cases/generated.json"),
+    fetchJson("./mock-data/onboarding/query-response.json"),
+    loadOnboardingDocuments()
+  ]);
+
+  let plans = fallback.plans;
+  if (planListResult.status === "fulfilled" && Array.isArray(planListResult.value)) {
+    plans = planListResult.value;
+  }
+  if (planDetailResult.status === "fulfilled" && planDetailResult.value?.id) {
+    const detail = planDetailResult.value;
+    plans = [detail, ...plans.filter((plan) => plan.id !== detail.id)];
+  }
+
+  const documents = documentsResult.status === "fulfilled" ? documentsResult.value : fallback.onboardingDocuments;
+  const refinement = refinementResult.status === "fulfilled" ? refinementResult.value : fallback.refinement;
+  const testCases = testCaseResult.status === "fulfilled" ? testCaseResult.value : fallback.testCases;
+  const onboarding = onboardingResult.status === "fulfilled"
+    ? onboardingResult.value
+    : answerOnboardingQuery(
+      {
+        role: "Developer",
+        journeyType: ONBOARDING_JOURNEY_TYPES.FIRST_WEEK
+      },
+      documents
+    );
+
+  return {
+    ...fallback,
+    plans,
+    selectedPlanId: plans[0]?.id || fallback.selectedPlanId,
+    refinement,
+    testCases,
+    onboarding,
+    onboardingDocuments: documents.length > 0 ? documents : fallback.onboardingDocuments
+  };
+}
+
+async function loadLivePlanningWorkspace() {
+  const summaries = await fetchJson("/api/plans");
+  const plans = Array.isArray(summaries) ? summaries : [];
+  const selectedPlan = plans.length > 0
+    ? await fetchJson(`/api/plans/${encodeURIComponent(plans[0].id)}`)
+    : null;
+  const documents = await loadOnboardingDocuments().catch(() => []);
+
+  return {
+    plans: selectedPlan ? [selectedPlan, ...plans.slice(1)] : plans,
+    selectedPlanId: selectedPlan?.id || plans[0]?.id || null,
+    refinement: createRefinementStoryPackage(buildRefinementSampleRequest()),
+    testCases: generateTestCases(buildTestCaseGenerationRequest()),
+    onboarding: answerOnboardingQuery({}, documents),
+    onboardingDocuments: documents
+  };
+}
+
+function syncWorkspaceForms(hub, setReviewForm, setRefinementForm, setTestCaseForm, setOnboardingForm) {
+  const selectedPlan = hub.plans.find((plan) => plan.id === hub.selectedPlanId) || hub.plans[0] || null;
+  const firstEpic = selectedPlan?.epics?.[0]?.id || "";
+
+  setReviewForm(EMPTY_REVIEW_FORM);
+  setRefinementForm({
+    notes: buildRefinementSampleRequest({ parentEpicLink: firstEpic }).notes,
+    candidateProblemStatement: "",
+    candidateStorySummary: "",
+    parentEpicLink: firstEpic,
+    labels: "refinement, ready",
+    sprint: "Sprint 14",
+    estimatePoints: "3",
+    references: "Confluence page REF-101",
+    teamContext: selectedPlan?.productName || "refinement facilitator"
+  });
+  setTestCaseForm({
+    storySummary: hub.refinement?.storySummary || "",
+    acceptanceCriteria: (hub.refinement?.acceptanceCriteria || []).join("\n"),
+    storyTitle: selectedPlan?.productName || "",
+    environment: "mock"
+  });
+  setOnboardingForm({
+    role: "Developer",
+    journeyType: ONBOARDING_JOURNEY_TYPES.FIRST_WEEK,
+    question: ""
+  });
 }

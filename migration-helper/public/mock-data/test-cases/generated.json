@@ -1,0 +1,267 @@
+{
+  "testSuites": [
+    {
+      "suiteName": "Test Suite 1: canonical story package ordering",
+      "acceptanceCriterion": "Given messy refinement notes, when the facilitator submits them, then the response returns the canonical story package with problemStatement, storySummary, acceptanceCriteria, dependencies, references, estimation, definitionOfReadyValidation, gaps, and normalizationNotes in that order.",
+      "untestable": false,
+      "untestableReason": "",
+      "rewriteSuggestion": "",
+      "testCases": [
+        {
+          "id": "TC-001",
+          "name": "Happy path for suite 1",
+          "priority": "High",
+          "type": "Positive",
+          "preconditions": ["messy refinement notes"],
+          "steps": ["the facilitator submits them"],
+          "expectedResult": "the response returns the canonical story package with problemStatement, storySummary, acceptanceCriteria, dependencies, references, estimation, definitionOfReadyValidation, gaps, and normalizationNotes in that order",
+          "testData": "Valid refinement notes with a parent epic link and sprint"
+        },
+        {
+          "id": "TC-002",
+          "name": "Negative path for suite 1",
+          "priority": "High",
+          "type": "Negative",
+          "preconditions": ["messy refinement notes", "The required parent epic link is missing."],
+          "steps": ["Attempt the action with invalid input: an empty or null payload"],
+          "expectedResult": "The system blocks submission and highlights the missing required fields.",
+          "testData": "Refinement payload missing the parent epic link"
+        },
+        {
+          "id": "TC-003",
+          "name": "Edge path for suite 1",
+          "priority": "Medium",
+          "type": "Edge Case",
+          "preconditions": ["messy refinement notes"],
+          "steps": ["Repeat the action twice in mock to check duplicate or repeated execution behavior."],
+          "expectedResult": "The system keeps behavior stable under repeated execution and avoids duplicate side effects.",
+          "testData": "Repeated refinement submission"
+        }
+      ]
+    },
+    {
+      "suiteName": "Test Suite 2: problem and story alignment",
+      "acceptanceCriterion": "Should flag a misalignment when the notes describe one workstream but the story summary focuses on another.",
+      "untestable": false,
+      "untestableReason": "",
+      "rewriteSuggestion": "",
+      "testCases": [
+        {
+          "id": "TC-004",
+          "name": "Happy path for suite 2",
+          "priority": "High",
+          "type": "Positive",
+          "preconditions": ["The story context is available and required inputs are valid."],
+          "steps": ["Submit the flow described by the acceptance criterion using valid data."],
+          "expectedResult": "The system produces the observable outcome described by the criterion.",
+          "testData": "Valid refinement notes aligned to the story summary"
+        },
+        {
+          "id": "TC-005",
+          "name": "Negative path for suite 2",
+          "priority": "High",
+          "type": "Negative",
+          "preconditions": ["The story context is available but one required input is missing or malformed."],
+          "steps": ["Submit the flow with an invalid field, null value, or empty payload."],
+          "expectedResult": "The system rejects the request and surfaces a clear validation error.",
+          "testData": "Notes that mention onboarding while the story summary targets QE work"
+        },
+        {
+          "id": "TC-006",
+          "name": "Edge path for suite 2",
+          "priority": "Medium",
+          "type": "Edge Case",
+          "preconditions": ["The request body is empty or contains optional null values."],
+          "steps": ["Execute the flow with empty, null, blank, or optional inputs."],
+          "expectedResult": "The system handles empty or null inputs without crashing and returns a clear response.",
+          "testData": "Sparse refinement notes"
+        }
+      ]
+    },
+    {
+      "suiteName": "Test Suite 3: estimate split guidance",
+      "acceptanceCriterion": "Should recommend splitting the work when the estimate is greater than 5 story points.",
+      "untestable": false,
+      "untestableReason": "",
+      "rewriteSuggestion": "",
+      "testCases": [
+        {
+          "id": "TC-007",
+          "name": "Happy path for suite 3",
+          "priority": "High",
+          "type": "Positive",
+          "preconditions": ["The accepted story and estimate are available."],
+          "steps": ["Submit a story with a 5-point estimate or lower."],
+          "expectedResult": "The system does not recommend a split for work at or below the threshold.",
+          "testData": "5 story points"
+        },
+        {
+          "id": "TC-008",
+          "name": "Negative path for suite 3",
+          "priority": "High",
+          "type": "Negative",
+          "preconditions": ["The accepted story and estimate are available."],
+          "steps": ["Submit a story with an invalid or missing estimate."],
+          "expectedResult": "The system prompts for a valid estimate and does not mark the story ready.",
+          "testData": "Blank estimate"
+        },
+        {
+          "id": "TC-009",
+          "name": "Boundary path for suite 3",
+          "priority": "Medium",
+          "type": "Boundary",
+          "preconditions": ["The accepted story and estimate are available."],
+          "steps": ["Submit estimates of 4, 5, and 6 points."],
+          "expectedResult": "The system treats 4 and 5 as within threshold and flags 6 for split guidance.",
+          "testData": "4, 5, 6"
+        }
+      ]
+    }
+  ],
+  "suites": [
+    {
+      "suiteName": "Test Suite 1: canonical story package ordering",
+      "acceptanceCriterion": "Given messy refinement notes, when the facilitator submits them, then the response returns the canonical story package with problemStatement, storySummary, acceptanceCriteria, dependencies, references, estimation, definitionOfReadyValidation, gaps, and normalizationNotes in that order.",
+      "untestable": false,
+      "untestableReason": "",
+      "rewriteSuggestion": "",
+      "testCases": [
+        {
+          "id": "TC-001",
+          "name": "Happy path for suite 1",
+          "priority": "High",
+          "type": "Positive",
+          "preconditions": ["messy refinement notes"],
+          "steps": ["the facilitator submits them"],
+          "expectedResult": "the response returns the canonical story package with problemStatement, storySummary, acceptanceCriteria, dependencies, references, estimation, definitionOfReadyValidation, gaps, and normalizationNotes in that order",
+          "testData": "Valid refinement notes with a parent epic link and sprint"
+        },
+        {
+          "id": "TC-002",
+          "name": "Negative path for suite 1",
+          "priority": "High",
+          "type": "Negative",
+          "preconditions": ["messy refinement notes", "The required parent epic link is missing."],
+          "steps": ["Attempt the action with invalid input: an empty or null payload"],
+          "expectedResult": "The system blocks submission and highlights the missing required fields.",
+          "testData": "Refinement payload missing the parent epic link"
+        },
+        {
+          "id": "TC-003",
+          "name": "Edge path for suite 1",
+          "priority": "Medium",
+          "type": "Edge Case",
+          "preconditions": ["messy refinement notes"],
+          "steps": ["Repeat the action twice in mock to check duplicate or repeated execution behavior."],
+          "expectedResult": "The system keeps behavior stable under repeated execution and avoids duplicate side effects.",
+          "testData": "Repeated refinement submission"
+        }
+      ]
+    },
+    {
+      "suiteName": "Test Suite 2: problem and story alignment",
+      "acceptanceCriterion": "Should flag a misalignment when the notes describe one workstream but the story summary focuses on another.",
+      "untestable": false,
+      "untestableReason": "",
+      "rewriteSuggestion": "",
+      "testCases": [
+        {
+          "id": "TC-004",
+          "name": "Happy path for suite 2",
+          "priority": "High",
+          "type": "Positive",
+          "preconditions": ["The story context is available and required inputs are valid."],
+          "steps": ["Submit the flow described by the acceptance criterion using valid data."],
+          "expectedResult": "The system produces the observable outcome described by the criterion.",
+          "testData": "Valid refinement notes aligned to the story summary"
+        },
+        {
+          "id": "TC-005",
+          "name": "Negative path for suite 2",
+          "priority": "High",
+          "type": "Negative",
+          "preconditions": ["The story context is available but one required input is missing or malformed."],
+          "steps": ["Submit the flow with an invalid field, null value, or empty payload."],
+          "expectedResult": "The system rejects the request and surfaces a clear validation error.",
+          "testData": "Notes that mention onboarding while the story summary targets QE work"
+        },
+        {
+          "id": "TC-006",
+          "name": "Edge path for suite 2",
+          "priority": "Medium",
+          "type": "Edge Case",
+          "preconditions": ["The request body is empty or contains optional null values."],
+          "steps": ["Execute the flow with empty, null, blank, or optional inputs."],
+          "expectedResult": "The system handles empty or null inputs without crashing and returns a clear response.",
+          "testData": "Sparse refinement notes"
+        }
+      ]
+    },
+    {
+      "suiteName": "Test Suite 3: estimate split guidance",
+      "acceptanceCriterion": "Should recommend splitting the work when the estimate is greater than 5 story points.",
+      "untestable": false,
+      "untestableReason": "",
+      "rewriteSuggestion": "",
+      "testCases": [
+        {
+          "id": "TC-007",
+          "name": "Happy path for suite 3",
+          "priority": "High",
+          "type": "Positive",
+          "preconditions": ["The accepted story and estimate are available."],
+          "steps": ["Submit a story with a 5-point estimate or lower."],
+          "expectedResult": "The system does not recommend a split for work at or below the threshold.",
+          "testData": "5 story points"
+        },
+        {
+          "id": "TC-008",
+          "name": "Negative path for suite 3",
+          "priority": "High",
+          "type": "Negative",
+          "preconditions": ["The accepted story and estimate are available."],
+          "steps": ["Submit a story with an invalid or missing estimate."],
+          "expectedResult": "The system prompts for a valid estimate and does not mark the story ready.",
+          "testData": "Blank estimate"
+        },
+        {
+          "id": "TC-009",
+          "name": "Boundary path for suite 3",
+          "priority": "Medium",
+          "type": "Boundary",
+          "preconditions": ["The accepted story and estimate are available."],
+          "steps": ["Submit estimates of 4, 5, and 6 points."],
+          "expectedResult": "The system treats 4 and 5 as within threshold and flags 6 for split guidance.",
+          "testData": "4, 5, 6"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalTestCases": 9,
+    "positive": 3,
+    "positiveCases": 3,
+    "positiveCount": 3,
+    "negative": 3,
+    "negativeCases": 3,
+    "negativeCount": 3,
+    "edgeCaseCount": 2,
+    "edgeCases": 2,
+    "boundary": 1,
+    "boundaryCases": 1,
+    "boundaryCount": 1,
+    "untestableCriteria": 0,
+    "gaps": [
+      "Coverage gap: empty/null input scenarios are not explicitly described.",
+      "Coverage gap: permission or access-denied behavior is not explicitly described.",
+      "Coverage gap: network failure and timeout behavior is not explicitly described.",
+      "Coverage gap: invalid data format behavior is not explicitly described."
+    ],
+    "gapList": [
+      "Coverage gap: empty/null input scenarios are not explicitly described.",
+      "Coverage gap: permission or access-denied behavior is not explicitly described.",
+      "Coverage gap: network failure and timeout behavior is not explicitly described.",
+      "Coverage gap: invalid data format behavior is not explicitly described."
+    ]
+  }
+}

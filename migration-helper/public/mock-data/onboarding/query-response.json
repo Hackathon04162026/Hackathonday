@@ -1,0 +1,63 @@
+{
+  "agentName": "Confluence-grounded Onboarding Agent",
+  "firstInteraction": [
+    "What is your role?",
+    "Is this your first week, or have you been here a bit and have specific questions?"
+  ],
+  "answer": "For a Developer in the first week, use these docs in order:\n1. Team overview: Start with the team map, the primary contacts, and the current delivery rhythm so you know who owns what. (New Joiner Team Overview)\n2. Tools and access: Request your repo, build, and environment access, then install the standard local tooling before you start work. (Tools and Access Checklist)\n3. Ceremonies and rituals: Use the team cadence to understand standups, refinement, retros, and the sprint boundary. (Ceremonies and Rituals Guide)\n4. Codebase and architecture: Read the architecture primer, locate the main repositories, and follow the documented local run path before changing code. (Codebase and Architecture Primer)\n5. Definition of Done / Definition of Ready: Use the team readiness and completion checklist before you pull a ticket into a sprint or mark work complete. (Definition of Done and Ready)\n6. First contribution: Pick a small ticket, open a draft PR early, and follow the review norms so your first contribution stays low risk. (First Contribution Playbook)\nWant me to go deeper on any step?",
+  "citedDocuments": [
+    {
+      "documentName": "New Joiner Team Overview",
+      "section": "Team overview",
+      "owner": "Team Lead",
+      "channel": "#onboarding-help",
+      "updatedOn": "2026-04-01",
+      "outdated": false
+    },
+    {
+      "documentName": "Tools and Access Checklist",
+      "section": "Tools and access",
+      "owner": "Engineering Enablement",
+      "channel": "#engineering-help",
+      "updatedOn": "2026-03-18",
+      "outdated": true
+    },
+    {
+      "documentName": "Ceremonies and Rituals Guide",
+      "section": "Ceremonies and rituals",
+      "owner": "Scrum Master",
+      "channel": "#delivery-ops",
+      "updatedOn": "2026-04-05",
+      "outdated": false
+    },
+    {
+      "documentName": "Codebase and Architecture Primer",
+      "section": "Codebase and architecture",
+      "owner": "Senior Engineer",
+      "channel": "#engineering-help",
+      "updatedOn": "2026-04-10",
+      "outdated": false
+    },
+    {
+      "documentName": "Definition of Done and Ready",
+      "section": "Definition of Done / Definition of Ready",
+      "owner": "Product Owner",
+      "channel": "#product",
+      "updatedOn": "2026-04-08",
+      "outdated": false
+    },
+    {
+      "documentName": "First Contribution Playbook",
+      "section": "First contribution",
+      "owner": "Engineering Manager",
+      "channel": "#engineering-help",
+      "updatedOn": "2026-04-03",
+      "outdated": false
+    }
+  ],
+  "warnings": [
+    "Note: This document may be outdated - verify with your team lead."
+  ],
+  "nextQuestions": [],
+  "suggestedEscalation": null
+}

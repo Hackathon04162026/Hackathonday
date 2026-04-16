@@ -1,0 +1,173 @@
+{
+  "id": "plan-feature-ready",
+  "displayName": "Refinement Workspace",
+  "productName": "Refinement Workspace",
+  "programLead": "Delivery Lead",
+  "targetUsers": [
+    "Agile facilitators",
+    "Product owners",
+    "QE engineers"
+  ],
+  "vision": "Create a guided planning flow that turns a program lead vision into reviewed epics, approved features, and sprint-ready stories.",
+  "desiredOutcomes": [
+    "Reduce back-and-forth during backlog refinement",
+    "Expose review gates before sprint commitment",
+    "Make acceptance criteria easier to test"
+  ],
+  "stage": "FEATURE_REVIEW",
+  "currentStage": "FEATURE_REVIEW",
+  "counts": {
+    "epics": 3,
+    "features": 2,
+    "stories": 0
+  },
+  "updatedAt": "2026-04-16T10:15:00.000Z",
+  "reviewCheckpoints": [
+    {
+      "stage": "epics",
+      "label": "Epic review",
+      "status": "approved",
+      "reviewer": "Delivery Lead",
+      "notes": "Approved for feature decomposition.",
+      "reviewedAt": "2026-04-16T10:15:00.000Z"
+    },
+    {
+      "stage": "features",
+      "label": "Feature review",
+      "status": "pending",
+      "reviewer": null,
+      "notes": "Feature review opens after epic approval.",
+      "reviewedAt": null
+    }
+  ],
+  "epics": [
+    {
+      "id": "plan-feature-ready-E1",
+      "kind": "EPIC",
+      "title": "Vision alignment and success framing",
+      "summary": "Translate the program lead vision into outcomes, assumptions, and measurable success signals for Refinement Workspace.",
+      "owner": "Delivery Lead",
+      "status": "DRAFT",
+      "tags": [
+        "vision",
+        "requirements"
+      ],
+      "acceptanceCriteria": [
+        "Document the core problem, target users, and value proposition",
+        "Capture at least three measurable outcomes tied to the vision",
+        "List open questions that require lead review"
+      ]
+    },
+    {
+      "id": "plan-feature-ready-E2",
+      "kind": "EPIC",
+      "title": "Refinement facilitation and story readiness",
+      "summary": "Define the facilitation flow that turns messy refinement notes into structured, sprint-ready stories with explicit review gates for agile facilitators and product owners.",
+      "owner": "Delivery manager",
+      "status": "DRAFT",
+      "tags": [
+        "agile",
+        "refinement"
+      ],
+      "acceptanceCriteria": [
+        "Map the end-to-end backlog flow from vision to sprint-ready stories",
+        "Define how messy notes are transformed into structured user stories",
+        "Identify the review checkpoints needed to keep refinement work moving"
+      ]
+    },
+    {
+      "id": "plan-feature-ready-E3",
+      "kind": "EPIC",
+      "title": "Quality and onboarding acceleration",
+      "summary": "Pair story generation with QE-ready test cases and a document-grounded onboarding guide so new contributors can execute confidently in Refinement Workspace.",
+      "owner": "Quality engineering lead",
+      "status": "DRAFT",
+      "tags": [
+        "qe",
+        "onboarding"
+      ],
+      "acceptanceCriteria": [
+        "Generate test-ready coverage from approved acceptance criteria",
+        "Describe the first-run onboarding journey for new contributors",
+        "Connect onboarding materials back to desired outcomes"
+      ]
+    }
+  ],
+  "features": [
+    {
+      "id": "plan-feature-ready-F1",
+      "kind": "FEATURE",
+      "title": "Vision intake workspace",
+      "summary": "Capture vision, program lead context, desired outcomes, and user segments in a structured planning intake.",
+      "owner": "Product manager",
+      "status": "READY_FOR_REVIEW",
+      "tags": [
+        "requirements",
+        "intake"
+      ],
+      "points": 3,
+      "acceptanceCriteria": [
+        "Program lead can submit a concise vision statement",
+        "Desired outcomes can be edited as separate items",
+        "Target user context is visible in the generated plan"
+      ]
+    },
+    {
+      "id": "plan-feature-ready-F2",
+      "kind": "FEATURE",
+      "title": "Refinement facilitator",
+      "summary": "Convert messy backlog refinement notes into structured, sprint-ready user stories with DoR validation.",
+      "owner": "Agile facilitator",
+      "status": "READY_FOR_REVIEW",
+      "tags": [
+        "refinement",
+        "stories"
+      ],
+      "points": 5,
+      "acceptanceCriteria": [
+        "Problem statements stay aligned with story summaries",
+        "Acceptance criteria mix Gherkin and checklist items",
+        "DoR gaps are called out without inventing requirements"
+      ]
+    }
+  ],
+  "stories": [],
+  "onboardingChecklist": [
+    {
+      "id": "confirm-vision",
+      "title": "Confirm the vision intake",
+      "detail": "Read the vision and desired outcomes before decomposing the backlog.",
+      "owner": "Program lead",
+      "unlockStage": "EPIC_REVIEW",
+      "status": "READY",
+      "completedAt": null
+    },
+    {
+      "id": "review-epics",
+      "title": "Review the epic gate",
+      "detail": "Use the epic review checkpoint to validate scope before features are drafted.",
+      "owner": "Agile facilitator",
+      "unlockStage": "EPIC_REVIEW",
+      "status": "READY",
+      "completedAt": null
+    },
+    {
+      "id": "review-features",
+      "title": "Review the feature gate",
+      "detail": "Confirm the feature breakdown before stories are produced.",
+      "owner": "Agile facilitator",
+      "unlockStage": "FEATURE_REVIEW",
+      "status": "READY",
+      "completedAt": null
+    },
+    {
+      "id": "start-delivery",
+      "title": "Start story-ready delivery",
+      "detail": "Move into sprint planning once the backlog is story-ready.",
+      "owner": "Delivery team",
+      "unlockStage": "STORY_READY",
+      "status": "UPCOMING",
+      "completedAt": null
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "stories": [
+    {
+      "problemStatement": "The current backlog refinement discussion describes scattered refinement notes that need to be converted into a sprint-ready backlog artifact. This matters because the team needs a consistent, reviewable story before work can be committed. The purpose of this work is to turn the discussion into a clear refinement package. The discussion already identifies 2 ordered acceptance criteria.",
+      "storySummary": "As a refinement facilitator, I want to turn messy refinement notes into a structured story package so that I can help the team commit work with clear scope and testable acceptance criteria.",
+      "acceptanceCriteria": [
+        "Given messy refinement notes, when the facilitator submits them, then the response returns the canonical story package with problemStatement, storySummary, acceptanceCriteria, dependencies, references, estimation, definitionOfReadyValidation, gaps, and normalizationNotes in that order.",
+        "Should flag a misalignment when the notes describe one workstream but the story summary focuses on another.",
+        "Should add DoR gaps for missing parent epic link, labels, sprint, or estimate information."
+      ],
+      "dependencies": [
+        "Parent epic link: EPIC-101",
+        "Labels: refinement, ready",
+        "Sprint: Sprint 14",
+        "Estimate: 3 points"
+      ],
+      "references": [
+        "Confluence page REF-101",
+        "Backlog refinement session notes"
+      ],
+      "estimation": "3 story points",
+      "definitionOfReadyValidation": [
+        "[x] Problem statement present and aligned with story",
+        "[x] User story follows \"As a / I want / So that\" format",
+        "[x] Acceptance criteria are present and testable",
+        "[x] Dependencies discussed",
+        "[x] Estimation <= 5 story points (if larger, recommend splitting)",
+        "[x] Parent Epic Link identified",
+        "[x] Label added",
+        "[x] Sprint identified"
+      ],
+      "gaps": [
+        "⚠️ DoR GAP: problem statement was not explicitly provided in the refinement notes"
+      ],
+      "normalizationNotes": [
+        "Collapsed whitespace and removed empty lines from the refinement notes.",
+        "Primary theme detected: Refinement.",
+        "Generated a canonical story summary because no candidate summary was provided.",
+        "Surface any unresolved gaps before sprint commitment."
+      ],
+      "parentEpicLink": "EPIC-101",
+      "labels": [
+        "refinement",
+        "ready"
+      ],
+      "label": "refinement",
+      "sprint": "Sprint 14"
+    }
+  ],
+  "story": {
+    "problemStatement": "The current backlog refinement discussion describes scattered refinement notes that need to be converted into a sprint-ready backlog artifact. This matters because the team needs a consistent, reviewable story before work can be committed. The purpose of this work is to turn the discussion into a clear refinement package. The discussion already identifies 2 ordered acceptance criteria.",
+    "storySummary": "As a refinement facilitator, I want to turn messy refinement notes into a structured story package so that I can help the team commit work with clear scope and testable acceptance criteria.",
+    "acceptanceCriteria": [
+      "Given messy refinement notes, when the facilitator submits them, then the response returns the canonical story package with problemStatement, storySummary, acceptanceCriteria, dependencies, references, estimation, definitionOfReadyValidation, gaps, and normalizationNotes in that order.",
+      "Should flag a misalignment when the notes describe one workstream but the story summary focuses on another.",
+      "Should add DoR gaps for missing parent epic link, labels, sprint, or estimate information."
+    ],
+    "dependencies": [
+      "Parent epic link: EPIC-101",
+      "Labels: refinement, ready",
+      "Sprint: Sprint 14",
+      "Estimate: 3 points"
+    ],
+    "references": [
+      "Confluence page REF-101",
+      "Backlog refinement session notes"
+    ],
+    "estimation": "3 story points",
+    "definitionOfReadyValidation": [
+      "[x] Problem statement present and aligned with story",
+      "[x] User story follows \"As a / I want / So that\" format",
+      "[x] Acceptance criteria are present and testable",
+      "[x] Dependencies discussed",
+      "[x] Estimation <= 5 story points (if larger, recommend splitting)",
+      "[x] Parent Epic Link identified",
+      "[x] Label added",
+      "[x] Sprint identified"
+    ],
+    "gaps": [
+      "⚠️ DoR GAP: problem statement was not explicitly provided in the refinement notes"
+    ],
+    "normalizationNotes": [
+      "Collapsed whitespace and removed empty lines from the refinement notes.",
+      "Primary theme detected: Refinement.",
+      "Generated a canonical story summary because no candidate summary was provided.",
+      "Surface any unresolved gaps before sprint commitment."
+    ],
+    "parentEpicLink": "EPIC-101",
+    "labels": [
+      "refinement",
+      "ready"
+    ],
+    "label": "refinement",
+    "sprint": "Sprint 14"
+  }
+}
