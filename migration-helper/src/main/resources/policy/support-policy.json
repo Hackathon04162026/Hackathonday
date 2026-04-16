@@ -1,0 +1,56 @@
+{
+  "datasetVersion": "2026.04",
+  "source": "classpath:policy/support-policy.json",
+  "generatedOn": "2026-04-16",
+  "policies": [
+    {
+      "ecosystem": "nodejs",
+      "component": "node",
+      "source": "https://nodejs.org/en/about/previous-releases",
+      "versions": [
+        {
+          "version": "22.x",
+          "supportStatus": "supported",
+          "releasedOn": "2024-04-24",
+          "supportEndsOn": "2027-04-30",
+          "preferredNextVersion": "22.x"
+        },
+        {
+          "version": "20.x",
+          "supportStatus": "expiring-soon",
+          "releasedOn": "2023-04-18",
+          "supportEndsOn": "2026-04-30",
+          "preferredNextVersion": "22.x"
+        },
+        {
+          "version": "18.x",
+          "supportStatus": "unsupported",
+          "releasedOn": "2022-04-19",
+          "supportEndsOn": "2025-04-30",
+          "preferredNextVersion": "20.x"
+        }
+      ]
+    },
+    {
+      "ecosystem": "python",
+      "component": "python",
+      "source": "https://devguide.python.org/versions/",
+      "versions": [
+        {
+          "version": "3.13",
+          "supportStatus": "supported",
+          "releasedOn": "2024-10-07",
+          "supportEndsOn": "2029-10-01",
+          "preferredNextVersion": "3.13"
+        },
+        {
+          "version": "3.12",
+          "supportStatus": "expiring-soon",
+          "releasedOn": "2023-10-02",
+          "supportEndsOn": "2028-10-01",
+          "preferredNextVersion": "3.13"
+        }
+      ]
+    }
+  ]
+}

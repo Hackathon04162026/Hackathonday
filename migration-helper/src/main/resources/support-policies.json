@@ -1,0 +1,176 @@
+{
+  "schemaVersion": "1",
+  "generatedOn": "2026-04-16",
+  "sources": [
+    {
+      "id": "node-release-schedule",
+      "name": "Node.js Release Schedule",
+      "url": "https://nodejs.org/en/about/previous-releases",
+      "retrievedOn": "2026-04-16"
+    },
+    {
+      "id": "dotnet-support-policy",
+      "name": ".NET Support Policy",
+      "url": "https://dotnet.microsoft.com/en-us/platform/support/policy",
+      "retrievedOn": "2026-04-16"
+    },
+    {
+      "id": "go-release-policy",
+      "name": "Go Release Policy",
+      "url": "https://go.dev/doc/devel/release",
+      "retrievedOn": "2026-04-16"
+    },
+    {
+      "id": "java-support-policy",
+      "name": "Oracle Java SE Support Roadmap",
+      "url": "https://www.oracle.com/java/technologies/java-se-support-roadmap.html",
+      "retrievedOn": "2026-04-16"
+    }
+  ],
+  "policies": [
+    {
+      "ecosystem": "node",
+      "component": "node",
+      "versions": [
+        {
+          "version": "18",
+          "releaseDate": "2022-04-19",
+          "supportEndDate": "2025-04-30",
+          "preferredUpgrade": "22",
+          "alternativeUpgrades": ["20"],
+          "sourceId": "node-release-schedule"
+        },
+        {
+          "version": "20",
+          "releaseDate": "2023-04-18",
+          "supportEndDate": "2026-04-30",
+          "preferredUpgrade": "22",
+          "alternativeUpgrades": ["24"],
+          "sourceId": "node-release-schedule"
+        },
+        {
+          "version": "22",
+          "releaseDate": "2024-04-24",
+          "supportEndDate": "2027-04-30",
+          "preferredUpgrade": "24",
+          "alternativeUpgrades": ["20"],
+          "sourceId": "node-release-schedule"
+        },
+        {
+          "version": "24",
+          "releaseDate": "2025-05-06",
+          "supportEndDate": "2028-04-30",
+          "preferredUpgrade": "24",
+          "alternativeUpgrades": ["22"],
+          "sourceId": "node-release-schedule"
+        }
+      ]
+    },
+    {
+      "ecosystem": "dotnet",
+      "component": "sdk",
+      "versions": [
+        {
+          "version": "6.0",
+          "releaseDate": "2021-11-08",
+          "supportEndDate": "2024-11-12",
+          "preferredUpgrade": "8.0",
+          "alternativeUpgrades": ["9.0"],
+          "sourceId": "dotnet-support-policy"
+        },
+        {
+          "version": "8.0",
+          "releaseDate": "2023-11-14",
+          "supportEndDate": "2026-11-10",
+          "preferredUpgrade": "10.0",
+          "alternativeUpgrades": ["9.0"],
+          "sourceId": "dotnet-support-policy"
+        },
+        {
+          "version": "9.0",
+          "releaseDate": "2024-11-12",
+          "supportEndDate": "2026-05-12",
+          "preferredUpgrade": "10.0",
+          "alternativeUpgrades": ["8.0"],
+          "sourceId": "dotnet-support-policy"
+        },
+        {
+          "version": "10.0",
+          "releaseDate": "2025-11-11",
+          "supportEndDate": "2028-11-14",
+          "preferredUpgrade": "10.0",
+          "alternativeUpgrades": ["8.0"],
+          "sourceId": "dotnet-support-policy"
+        }
+      ]
+    },
+    {
+      "ecosystem": "go",
+      "component": "go",
+      "versions": [
+        {
+          "version": "1.22",
+          "releaseDate": "2024-02-06",
+          "supportEndDate": "2025-08-01",
+          "preferredUpgrade": "1.24",
+          "alternativeUpgrades": ["1.23"],
+          "sourceId": "go-release-policy"
+        },
+        {
+          "version": "1.23",
+          "releaseDate": "2024-08-13",
+          "supportEndDate": "2026-02-01",
+          "preferredUpgrade": "1.24",
+          "alternativeUpgrades": ["1.25"],
+          "sourceId": "go-release-policy"
+        },
+        {
+          "version": "1.24",
+          "releaseDate": "2025-02-11",
+          "supportEndDate": "2026-08-01",
+          "preferredUpgrade": "1.25",
+          "alternativeUpgrades": ["1.23"],
+          "sourceId": "go-release-policy"
+        },
+        {
+          "version": "1.25",
+          "releaseDate": "2025-08-12",
+          "supportEndDate": "2027-02-01",
+          "preferredUpgrade": "1.25",
+          "alternativeUpgrades": ["1.24"],
+          "sourceId": "go-release-policy"
+        }
+      ]
+    },
+    {
+      "ecosystem": "java",
+      "component": "jdk",
+      "versions": [
+        {
+          "version": "17",
+          "releaseDate": "2021-09-14",
+          "supportEndDate": "2029-09-30",
+          "preferredUpgrade": "21",
+          "alternativeUpgrades": [],
+          "sourceId": "java-support-policy"
+        },
+        {
+          "version": "21",
+          "releaseDate": "2023-09-19",
+          "supportEndDate": "2031-09-30",
+          "preferredUpgrade": "25",
+          "alternativeUpgrades": ["17"],
+          "sourceId": "java-support-policy"
+        },
+        {
+          "version": "25",
+          "releaseDate": "2025-09-16",
+          "supportEndDate": "2033-09-30",
+          "preferredUpgrade": "25",
+          "alternativeUpgrades": ["21"],
+          "sourceId": "java-support-policy"
+        }
+      ]
+    }
+  ]
+}

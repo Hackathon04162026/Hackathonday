@@ -1,0 +1,56 @@
+[
+  {
+    "ecosystem": "docker",
+    "component": "eclipse-temurin",
+    "detectedVersion": "21-jre",
+    "confidence": "HIGH",
+    "indirect": false,
+    "evidence": {
+      "file": "Dockerfile",
+      "line": 1,
+      "instruction": "FROM",
+      "rawReference": "eclipse-temurin:21-jre"
+    }
+  },
+  {
+    "ecosystem": "docker",
+    "component": "${BUILD_IMAGE}",
+    "detectedVersion": "UNRESOLVED",
+    "confidence": "LOW",
+    "indirect": true,
+    "evidence": {
+      "file": "Dockerfile",
+      "line": 2,
+      "instruction": "FROM",
+      "rawReference": "${BUILD_IMAGE}"
+    }
+  },
+  {
+    "ecosystem": "ci",
+    "component": "actions/setup-node",
+    "detectedVersion": "20",
+    "confidence": "HIGH",
+    "indirect": false,
+    "evidence": {
+      "file": ".github/workflows/ci.yml",
+      "line": 8,
+      "action": "actions/setup-node",
+      "versionKey": "node-version",
+      "rawValue": "20"
+    }
+  },
+  {
+    "ecosystem": "ci",
+    "component": "actions/setup-dotnet",
+    "detectedVersion": "8.0.x",
+    "confidence": "HIGH",
+    "indirect": false,
+    "evidence": {
+      "file": ".github/workflows/ci.yml",
+      "line": 11,
+      "action": "actions/setup-dotnet",
+      "versionKey": "dotnet-version",
+      "rawValue": "8.0.x"
+    }
+  }
+]

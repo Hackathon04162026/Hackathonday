@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Migration Helper scan workspace for uploading archives, scanning paths, reviewing results, and exporting reports.">
+  <title>Migration Helper</title>
+</head>
+<body>
+  <a href="#main-content">Skip to content</a>
+
+  <header id="app-header" data-region="app-header">
+    <div>
+      <p id="app-eyebrow">Worker 6 UI shell</p>
+      <h1 id="app-title">Migration Helper</h1>
+      <p id="app-subtitle">Upload an archive or scan a local path, then review scan results and export report JSON.</p>
+    </div>
+
+    <section id="api-reference" aria-labelledby="api-reference-title">
+      <h2 id="api-reference-title">API endpoints</h2>
+      <ul>
+        <li><code>POST /api/scans</code></li>
+        <li><code>POST /api/scans/path</code></li>
+        <li><code>GET /api/scans</code></li>
+        <li><code>GET /api/scans/{id}</code></li>
+        <li><code>GET /api/scans/{id}/report</code></li>
+      </ul>
+    </section>
+  </header>
+
+  <main id="main-content" data-region="workspace">
+    <section id="scan-launcher" aria-labelledby="scan-launcher-title">
+      <h2 id="scan-launcher-title">Start a scan</h2>
+
+      <div id="launch-grid" data-layout="scan-launcher">
+        <section id="archive-scan-section" aria-labelledby="archive-scan-title" data-scan-mode="archive">
+          <h3 id="archive-scan-title">Upload archive</h3>
+          <form id="archive-scan-form" data-endpoint="/api/scans" data-request-type="archive" enctype="multipart/form-data" novalidate>
+            <div>
+              <label for="archive-file">Archive file</label>
+              <input id="archive-file" name="archiveFile" type="file" accept=".zip,.tar,.gz,.tgz,application/zip,application/x-tar" data-field="archive-file">
+            </div>
+            <div>
+              <label for="uploaded-archive-token">Upload token</label>
+              <input id="uploaded-archive-token" name="uploadedArchiveToken" type="text" autocomplete="off" placeholder="upload-123" data-field="uploadedArchiveToken">
+            </div>
+            <div>
+              <label for="source-filename">Source filename</label>
+              <input id="source-filename" name="sourceFilename" type="text" autocomplete="off" placeholder="demo.zip" data-field="sourceFilename">
+            </div>
+            <div>
+              <label for="archive-size-bytes">Size in bytes</label>
+              <input id="archive-size-bytes" name="sizeBytes" type="number" min="0" step="1" inputmode="numeric" placeholder="2048" data-field="sizeBytes">
+            </div>
+            <div>
+              <label for="archive-display-name">Display name</label>
+              <input id="archive-display-name" name="displayName" type="text" autocomplete="off" placeholder="Demo Archive" data-field="displayName">
+            </div>
+            <div>
+              <label for="archive-requested-by">Requested by</label>
+              <input id="archive-requested-by" name="requestedBy" type="text" autocomplete="off" placeholder="ui" data-field="requestedBy">
+            </div>
+            <div>
+              <button type="button" id="archive-scan-submit" data-action="submit-scan" data-scan-mode="archive">Queue archive scan</button>
+              <button type="reset" id="archive-scan-reset">Clear</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="path-scan-section" aria-labelledby="path-scan-title" data-scan-mode="path">
+          <h3 id="path-scan-title">Scan path</h3>
+          <form id="path-scan-form" data-endpoint="/api/scans/path" data-request-type="path" novalidate>
+            <div>
+              <label for="scan-path">Path</label>
+              <input id="scan-path" name="path" type="text" autocomplete="off" placeholder="C:/repos/demo" data-field="path">
+            </div>
+            <div>
+              <label for="path-display-name">Display name</label>
+              <input id="path-display-name" name="displayName" type="text" autocomplete="off" placeholder="Local Demo" data-field="displayName">
+            </div>
+            <div>
+              <label for="path-requested-by">Requested by</label>
+              <input id="path-requested-by" name="requestedBy" type="text" autocomplete="off" placeholder="cli" data-field="requestedBy">
+            </div>
+            <div>
+              <button type="button" id="path-scan-submit" data-action="submit-scan" data-scan-mode="path">Queue path scan</button>
+              <button type="reset" id="path-scan-reset">Clear</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </section>
+
+    <section id="scan-dashboard" aria-labelledby="scan-dashboard-title">
+      <h2 id="scan-dashboard-title">Scan dashboard</h2>
+
+      <section id="summary-region" aria-labelledby="summary-region-title">
+        <h3 id="summary-region-title">Summary cards</h3>
+        <div id="summary-cards" data-region="summary-cards">
+          <article id="summary-total-scans" data-summary-key="totalScans" aria-labelledby="summary-total-scans-label">
+            <h4 id="summary-total-scans-label">Total scans</h4>
+            <p data-value>0</p>
+          </article>
+          <article id="summary-pending-scans" data-summary-key="pendingScans" aria-labelledby="summary-pending-scans-label">
+            <h4 id="summary-pending-scans-label">Pending</h4>
+            <p data-value>0</p>
+          </article>
+          <article id="summary-complete-scans" data-summary-key="completeScans" aria-labelledby="summary-complete-scans-label">
+            <h4 id="summary-complete-scans-label">Complete</h4>
+            <p data-value>0</p>
+          </article>
+          <article id="summary-report-ready" data-summary-key="reportReadyScans" aria-labelledby="summary-report-ready-label">
+            <h4 id="summary-report-ready-label">Report ready</h4>
+            <p data-value>0</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="scan-list-region" aria-labelledby="scan-list-region-title">
+        <div id="scan-list-header">
+          <h3 id="scan-list-region-title">Scan list</h3>
+          <div id="scan-list-actions">
+            <button type="button" id="refresh-scans" data-action="refresh-scans">Refresh scans</button>
+            <button type="button" id="export-scans-json" data-action="export-json" data-export-target="scan-list" aria-describedby="export-scans-json-help">Export JSON</button>
+            <span id="export-scans-json-help">Placeholder export action for the list view.</span>
+          </div>
+        </div>
+
+        <section id="scan-filters" aria-labelledby="scan-filters-title" data-region="filters">
+          <h4 id="scan-filters-title">Filter controls</h4>
+          <form id="scan-filter-form" data-action="filter-scans" novalidate>
+            <div>
+              <label for="filter-search">Search</label>
+              <input id="filter-search" name="search" type="search" autocomplete="off" placeholder="Search scans, paths, or reports" data-filter-field="search">
+            </div>
+            <div>
+              <label for="filter-status">Status</label>
+              <select id="filter-status" name="status" data-filter-field="status">
+                <option value="">Any status</option>
+                <option value="pending">Pending</option>
+                <option value="running">Running</option>
+                <option value="complete">Complete</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+            <div>
+              <label for="filter-source">Source</label>
+              <select id="filter-source" name="source" data-filter-field="source">
+                <option value="">Any source</option>
+                <option value="archive">Archive upload</option>
+                <option value="path">Path scan</option>
+              </select>
+            </div>
+            <div>
+              <label for="filter-requested-by">Requested by</label>
+              <input id="filter-requested-by" name="requestedBy" type="text" autocomplete="off" placeholder="ui" data-filter-field="requestedBy">
+            </div>
+            <div>
+              <label for="filter-sort">Sort</label>
+              <select id="filter-sort" name="sort" data-filter-field="sort">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="name">Name</option>
+                <option value="status">Status</option>
+              </select>
+            </div>
+            <div>
+              <button type="button" id="apply-filters" data-action="apply-filters">Apply filters</button>
+              <button type="reset" id="reset-filters">Reset</button>
+            </div>
+          </form>
+        </section>
+
+        <div id="scan-list-status" role="status" aria-live="polite">Waiting for scans...</div>
+
+        <div id="scan-results-region" data-region="results-table">
+          <table id="scan-results-table">
+            <caption class="sr-only">Scans and their latest states</caption>
+            <thead>
+              <tr>
+                <th scope="col">Scan</th>
+                <th scope="col">Source</th>
+                <th scope="col">Requested by</th>
+                <th scope="col">Status</th>
+                <th scope="col">Updated</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="scan-results-body" data-empty-state="true">
+              <tr id="scan-results-empty">
+                <td colspan="6">No scans loaded yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <aside id="scan-detail-drawer" aria-labelledby="scan-detail-title" data-state="closed" hidden>
+    <header>
+      <div>
+        <p id="scan-detail-kicker">Selected scan</p>
+        <h2 id="scan-detail-title">Scan details</h2>
+      </div>
+      <button type="button" id="close-scan-detail" data-action="close-detail">Close</button>
+    </header>
+
+    <section id="scan-detail-summary" aria-labelledby="scan-detail-summary-title">
+      <h3 id="scan-detail-summary-title">Overview</h3>
+      <dl id="scan-detail-metadata" data-region="detail-metadata">
+        <div>
+          <dt>ID</dt>
+          <dd id="scan-detail-id" data-field="id">-</dd>
+        </div>
+        <div>
+          <dt>Name</dt>
+          <dd id="scan-detail-name" data-field="name">-</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd id="scan-detail-status" data-field="status">-</dd>
+        </div>
+        <div>
+          <dt>Requested by</dt>
+          <dd id="scan-detail-requested-by" data-field="requestedBy">-</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="scan-detail-report" aria-labelledby="scan-detail-report-title">
+      <h3 id="scan-detail-report-title">Report</h3>
+      <div id="scan-detail-report-summary" data-region="report-summary">
+        <p id="scan-detail-report-placeholder">Select a scan to load the normalized report.</p>
+      </div>
+    </section>
+
+    <section id="scan-detail-json" aria-labelledby="scan-detail-json-title">
+      <h3 id="scan-detail-json-title">JSON export</h3>
+      <p>Use the actions below to export the selected scan or its report once data is available.</p>
+      <div id="scan-detail-json-actions">
+        <button type="button" id="copy-scan-json" data-action="copy-json" data-export-target="selected-scan">Copy scan JSON</button>
+        <button type="button" id="copy-report-json" data-action="copy-json" data-export-target="selected-report">Copy report JSON</button>
+        <a id="download-report-json" href="#" data-action="download-json" data-export-target="selected-report" aria-disabled="true">Download report JSON</a>
+      </div>
+    </section>
+  </aside>
+
+  <noscript>
+    <p>This workspace needs JavaScript to submit scans, load results, and open the detail drawer.</p>
+  </noscript>
+</body>
+</html>

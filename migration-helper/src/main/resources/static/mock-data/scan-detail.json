@@ -1,0 +1,31 @@
+{
+  "id": "scan-local-001",
+  "status": "COMPLETED",
+  "sourceType": "LOCAL_PATH",
+  "displayName": "Monorepo Workspace",
+  "requestedBy": "alex",
+  "sourceReference": "/workspace/source/monorepo",
+  "createdAt": "2026-04-16T17:32:00Z",
+  "startedAt": "2026-04-16T17:32:18Z",
+  "completedAt": "2026-04-16T17:38:12Z",
+  "updatedAt": "2026-04-16T17:38:12Z",
+  "lifecycle": [
+    "QUEUED",
+    "INGESTING",
+    "ANALYZING",
+    "AGGREGATING",
+    "COMPLETED"
+  ],
+  "warnings": [
+    {
+      "code": "WORKSPACE_NORMALIZED",
+      "severity": "INFO",
+      "message": "Workspace path normalized to /workspace/monorepo"
+    },
+    {
+      "code": "DEPENDENCY_HINT",
+      "severity": "LOW",
+      "message": "One dependency version was inferred from a manifest rather than a lockfile."
+    }
+  ]
+}

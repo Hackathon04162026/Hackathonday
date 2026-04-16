@@ -1,0 +1,71 @@
+{
+  "id": "scan-ui-sample",
+  "applicationName": "Migration Helper",
+  "status": "READY",
+  "generatedAt": "2026-04-16T19:00:00Z",
+  "metadata": {
+    "sourceType": "LOCAL_PATH",
+    "sourceReference": "C:/repos/demo",
+    "requestedBy": "cli",
+    "createdAt": "2026-04-16T18:59:30Z",
+    "startedAt": "2026-04-16T18:59:35Z",
+    "completedAt": "2026-04-16T18:59:55Z"
+  },
+  "workspace": {
+    "normalizedWorkspacePath": "C:/repos/demo",
+    "normalizationStatus": "READY"
+  },
+  "warnings": [
+    {
+      "code": "PIPELINE_PLACEHOLDER",
+      "severity": "INFO",
+      "message": "Placeholder pipeline data is ready for review."
+    }
+  ],
+  "detectors": [
+    {
+      "ecosystem": "java",
+      "component": "spring-boot",
+      "detectedVersion": "3.2.5",
+      "confidence": "HIGH",
+      "indirect": false,
+      "evidence": {
+        "relativePath": "pom.xml",
+        "lineNumber": 12
+      }
+    },
+    {
+      "ecosystem": "node",
+      "component": "express",
+      "detectedVersion": "4.18.3",
+      "confidence": "MEDIUM",
+      "indirect": true,
+      "evidence": {
+        "relativePath": "package.json",
+        "lineNumber": 8
+      }
+    }
+  ],
+  "policyStatuses": [
+    {
+      "ecosystem": "java",
+      "component": "spring-boot",
+      "version": "3.2.5",
+      "supportStatus": "SUPPORTED",
+      "source": "policy-catalog"
+    }
+  ],
+  "recommendations": [
+    {
+      "ecosystem": "java",
+      "component": "spring-boot",
+      "currentVersion": "3.2.5",
+      "recommendedVersion": "21",
+      "alternativeVersions": [
+        "21",
+        "17"
+      ],
+      "rationale": "Align the workspace with the newest supported runtime."
+    }
+  ]
+}
