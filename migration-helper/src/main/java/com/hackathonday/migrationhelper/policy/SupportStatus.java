@@ -25,14 +25,6 @@ public enum SupportStatus {
 		return value;
 	}
 
-	public String responseValue() {
-		return value;
-	}
-
-	public String responseValue() {
-		return value;
-	}
-
 	@JsonCreator
 	public static SupportStatus fromValue(String rawValue) {
 		if (rawValue == null) {

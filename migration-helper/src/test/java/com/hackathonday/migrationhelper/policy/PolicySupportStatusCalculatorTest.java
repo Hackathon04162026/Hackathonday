@@ -38,6 +38,17 @@ class PolicySupportStatusCalculatorTest {
 	}
 
 	@Test
+	void fallsBackToEndOfLifeDateWhenSupportEndDateIsMissing() {
+		SupportStatus status = calculator.calculate(new PolicyLifecycleDates(
+				null,
+				LocalDate.of(2026, 10, 15)
+		));
+
+		assertThat(status).isEqualTo(SupportStatus.SUPPORTED);
+		assertThat(status.responseValue()).isEqualTo("supported");
+	}
+
+	@Test
 	void mapsUnsupportedWhenLifecycleDateHasArrived() {
 		SupportStatus status = calculator.calculate(new PolicyLifecycleDates(
 				LocalDate.of(2026, 4, 16),

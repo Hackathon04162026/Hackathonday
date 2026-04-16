@@ -55,6 +55,7 @@ public final class CiRuntimeDetector implements Detector {
 	private List<DetectedTechnology> scanWorkflow(Path projectRoot, Path workflow) {
 		List<DetectedTechnology> technologies = new ArrayList<>();
 		String relativePath = relativePath(projectRoot, workflow);
+		Path relativeSource = projectRoot.relativize(workflow);
 		try {
 			List<String> lines = Files.readAllLines(workflow, StandardCharsets.UTF_8);
 			for (int index = 0; index < lines.size(); index++) {
@@ -66,7 +67,7 @@ public final class CiRuntimeDetector implements Detector {
 				String runtime = actionMatcher.group(1).toLowerCase(Locale.ROOT);
 				String action = "actions/setup-" + runtime;
 				RuntimeVersionMatch version = findVersionForAction(lines, index, runtime);
-				technologies.add(createTechnology(relativePath, workflow, index + 1, action, version));
+				technologies.add(createTechnology(relativePath, relativeSource, workflow, index + 1, action, version));
 			}
 		} catch (IOException ignored) {
 			return List.of();
@@ -74,7 +75,7 @@ public final class CiRuntimeDetector implements Detector {
 		return technologies;
 	}
 
-	private DetectedTechnology createTechnology(String relativePath, Path workflow, int lineNumber, String action,
+	private DetectedTechnology createTechnology(String relativePath, Path relativeSource, Path workflow, int lineNumber, String action,
 			RuntimeVersionMatch version) {
 		String rootId = "ci-workflow:" + relativePath + ":" + lineNumber;
 		String nodeId = "runtime:" + lineNumber;
@@ -96,7 +97,7 @@ public final class CiRuntimeDetector implements Detector {
 
 		List<DetectionEvidence> evidence = List.of(new DetectionEvidence(
 				EvidenceType.BUILD_FILE,
-				workflow,
+				relativeSource,
 				"CI runtime configured on line " + lineNumber,
 				version.indirect() ? 0.55d : 1.0d
 		));

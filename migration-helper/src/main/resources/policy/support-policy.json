@@ -1,54 +1,160 @@
 {
   "datasetVersion": "2026.04",
-  "source": "classpath:policy/support-policy.json",
+  "source": "bundled-starter",
   "generatedOn": "2026-04-16",
   "policies": [
     {
       "ecosystem": "nodejs",
       "component": "node",
-      "source": "https://nodejs.org/en/about/previous-releases",
+      "source": "bundled-starter",
       "versions": [
         {
-          "version": "22.x",
+          "version": "22",
           "supportStatus": "supported",
           "releasedOn": "2024-04-24",
           "supportEndsOn": "2027-04-30",
-          "preferredNextVersion": "22.x"
+          "note": "Preferred target for new upgrades.",
+          "preferredNextVersion": "22"
         },
         {
-          "version": "20.x",
+          "version": "20",
           "supportStatus": "expiring-soon",
           "releasedOn": "2023-04-18",
           "supportEndsOn": "2026-04-30",
-          "preferredNextVersion": "22.x"
+          "note": "Still viable, but the next upgrade should already be queued.",
+          "preferredNextVersion": "22"
         },
         {
-          "version": "18.x",
+          "version": "18",
           "supportStatus": "unsupported",
           "releasedOn": "2022-04-19",
           "supportEndsOn": "2025-04-30",
-          "preferredNextVersion": "20.x"
+          "note": "Retire this line before planning further work.",
+          "preferredNextVersion": "22"
         }
       ]
     },
     {
       "ecosystem": "python",
       "component": "python",
-      "source": "https://devguide.python.org/versions/",
+      "source": "bundled-starter",
       "versions": [
         {
           "version": "3.13",
           "supportStatus": "supported",
           "releasedOn": "2024-10-07",
-          "supportEndsOn": "2029-10-01",
+          "supportEndsOn": "2027-10-31",
+          "note": "Preferred baseline for new Python migrations.",
           "preferredNextVersion": "3.13"
         },
         {
           "version": "3.12",
           "supportStatus": "expiring-soon",
           "releasedOn": "2023-10-02",
-          "supportEndsOn": "2028-10-01",
+          "supportEndsOn": "2026-10-31",
+          "note": "Safe for short-term use, but plan the next bump.",
           "preferredNextVersion": "3.13"
+        },
+        {
+          "version": "3.11",
+          "supportStatus": "unsupported",
+          "releasedOn": "2022-10-24",
+          "supportEndsOn": "2025-10-31",
+          "note": "Legacy line that should be migrated off first.",
+          "preferredNextVersion": "3.13"
+        }
+      ]
+    },
+    {
+      "ecosystem": "dotnet",
+      "component": "dotnet-sdk",
+      "source": "bundled-starter",
+      "versions": [
+        {
+          "version": "9.0",
+          "supportStatus": "supported",
+          "releasedOn": "2024-11-12",
+          "supportEndsOn": "2027-11-30",
+          "note": "Current preferred SDK line.",
+          "preferredNextVersion": "9.0"
+        },
+        {
+          "version": "8.0",
+          "supportStatus": "expiring-soon",
+          "releasedOn": "2023-11-14",
+          "supportEndsOn": "2026-11-10",
+          "note": "LTS line that should be refreshed on the next cycle.",
+          "preferredNextVersion": "9.0"
+        },
+        {
+          "version": "6.0",
+          "supportStatus": "unsupported",
+          "releasedOn": "2021-11-08",
+          "supportEndsOn": "2024-11-12",
+          "note": "Out of support and should be treated as a migration blocker.",
+          "preferredNextVersion": "9.0"
+        }
+      ]
+    },
+    {
+      "ecosystem": "go",
+      "component": "go",
+      "source": "bundled-starter",
+      "versions": [
+        {
+          "version": "1.24",
+          "supportStatus": "supported",
+          "releasedOn": "2025-02-25",
+          "supportEndsOn": "2027-02-28",
+          "note": "Best default for new Go services.",
+          "preferredNextVersion": "1.24"
+        },
+        {
+          "version": "1.23",
+          "supportStatus": "expiring-soon",
+          "releasedOn": "2024-08-13",
+          "supportEndsOn": "2026-08-31",
+          "note": "Good short-term option, but plan the toolchain refresh.",
+          "preferredNextVersion": "1.24"
+        },
+        {
+          "version": "1.22",
+          "supportStatus": "unsupported",
+          "releasedOn": "2024-02-06",
+          "supportEndsOn": "2025-02-28",
+          "note": "Retired line that should not be used as a target.",
+          "preferredNextVersion": "1.24"
+        }
+      ]
+    },
+    {
+      "ecosystem": "java",
+      "component": "jdk",
+      "source": "bundled-starter",
+      "versions": [
+        {
+          "version": "21",
+          "supportStatus": "supported",
+          "releasedOn": "2023-09-19",
+          "supportEndsOn": "2028-09-30",
+          "note": "Preferred current LTS line for migration baselines.",
+          "preferredNextVersion": "21"
+        },
+        {
+          "version": "17",
+          "supportStatus": "expiring-soon",
+          "releasedOn": "2021-09-14",
+          "supportEndsOn": "2026-09-30",
+          "note": "Still common, but the next LTS upgrade should be queued.",
+          "preferredNextVersion": "21"
+        },
+        {
+          "version": "11",
+          "supportStatus": "unsupported",
+          "releasedOn": "2018-09-25",
+          "supportEndsOn": "2024-09-30",
+          "note": "Too old for safe migration planning without an intermediate upgrade.",
+          "preferredNextVersion": "21"
         }
       ]
     }

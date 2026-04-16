@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="description" content="Migration Helper scan workspace for uploading archives, scanning paths, reviewing results, and exporting reports.">
   <title>Migration Helper</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <a href="#main-content">Skip to content</a>
@@ -15,6 +16,10 @@
       <p id="app-eyebrow">Worker 6 UI shell</p>
       <h1 id="app-title">Migration Helper</h1>
       <p id="app-subtitle">Upload an archive or scan a local path, then review scan results and export report JSON.</p>
+      <div id="app-mode-bar">
+        <span id="mode-indicator" class="pill info" data-mode-indicator>Mock mode</span>
+        <span id="mode-explainer">Use <code>?mode=live</code> to call the running API instead of checked-in samples.</span>
+      </div>
     </div>
 
     <section id="api-reference" aria-labelledby="api-reference-title">
@@ -30,6 +35,10 @@
   </header>
 
   <main id="main-content" data-region="workspace">
+    <section id="app-notice" class="notice" aria-live="polite">
+      Loading Worker 6 workspace...
+    </section>
+
     <section id="scan-launcher" aria-labelledby="scan-launcher-title">
       <h2 id="scan-launcher-title">Start a scan</h2>
 
@@ -195,6 +204,56 @@
           </table>
         </div>
       </section>
+
+      <section id="report-results-region" aria-labelledby="report-results-title">
+        <div id="report-results-header">
+          <h3 id="report-results-title">Filterable results</h3>
+          <button type="button" id="export-report-json" class="secondary" data-action="export-json" data-export-target="selected-report">Export selected report</button>
+        </div>
+
+        <form id="report-filter-form" data-action="filter-report-results" novalidate>
+          <div>
+            <label for="report-filter-search">Search results</label>
+            <input id="report-filter-search" name="search" type="search" autocomplete="off" placeholder="Search ecosystems, components, versions, or warnings">
+          </div>
+          <div>
+            <label for="report-filter-type">Result type</label>
+            <select id="report-filter-type" name="type">
+              <option value="all">All results</option>
+              <option value="detector">Detectors</option>
+              <option value="policy">Policy statuses</option>
+              <option value="recommendation">Recommendations</option>
+              <option value="warning">Warnings</option>
+            </select>
+          </div>
+          <div>
+            <button type="submit">Apply result filters</button>
+            <button type="reset" class="secondary">Reset</button>
+          </div>
+        </form>
+
+        <div id="report-results-empty" class="empty-state">
+          <div>
+            <h2>No report selected</h2>
+            <p>Select a scan to inspect detector findings, support policy data, warnings, and recommendations.</p>
+          </div>
+        </div>
+
+        <div id="report-results-table-wrap" class="table-wrap" hidden>
+          <table id="report-results-table">
+            <thead>
+              <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Ecosystem</th>
+                <th scope="col">Component</th>
+                <th scope="col">Version or Status</th>
+                <th scope="col">Notes</th>
+              </tr>
+            </thead>
+            <tbody id="report-results-body"></tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -250,5 +309,6 @@
   <noscript>
     <p>This workspace needs JavaScript to submit scans, load results, and open the detail drawer.</p>
   </noscript>
+  <script src="/app.js" defer></script>
 </body>
 </html>
