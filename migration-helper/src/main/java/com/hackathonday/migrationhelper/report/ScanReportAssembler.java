@@ -21,7 +21,7 @@ public class ScanReportAssembler {
 	private final MigrationHelperProperties properties;
 
 	public ScanReportAssembler(List<ReportContributor> contributors, MigrationHelperProperties properties) {
-		this(contributors, List.of(), properties);
+		this(contributors, List.of(new DetectorFindingPolicyEvaluator()), properties);
 	}
 
 	@Autowired

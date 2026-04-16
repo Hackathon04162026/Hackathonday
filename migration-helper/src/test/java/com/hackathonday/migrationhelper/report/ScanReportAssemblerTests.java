@@ -3,6 +3,8 @@ package com.hackathonday.migrationhelper.report;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hackathonday.migrationhelper.api.contract.DetectorFindingResponse;
+import com.hackathonday.migrationhelper.api.contract.PolicyStatusResponse;
+import com.hackathonday.migrationhelper.api.contract.RecommendationResponse;
 import com.hackathonday.migrationhelper.api.contract.WarningResponse;
 import com.hackathonday.migrationhelper.config.MigrationHelperProperties;
 import com.hackathonday.migrationhelper.scan.ScanRecord;
@@ -61,7 +63,28 @@ class ScanReportAssemblerTests {
 
 		ScanReportAssembler assembler = new ScanReportAssembler(
 				List.of(firstContributor, secondContributor),
-				List.of(new DetectorFindingPolicyEvaluator()),
+				List.of((scanRecord, detectorFindings) -> new PolicyEvaluation(
+						detectorFindings.stream()
+								.map(finding -> new PolicyStatusResponse(
+										finding.ecosystem(),
+										finding.component(),
+										finding.detectedVersion(),
+										finding.indirect() ? "UNKNOWN" : "SUPPORTED",
+										"test-adapter"
+								))
+								.toList(),
+						detectorFindings.stream()
+								.filter(DetectorFindingResponse::indirect)
+								.map(finding -> new RecommendationResponse(
+										finding.ecosystem(),
+										finding.component(),
+										finding.detectedVersion(),
+										finding.detectedVersion(),
+										List.of(),
+										"test adapter recommendation"
+								))
+								.toList()
+				)),
 				properties
 		);
 

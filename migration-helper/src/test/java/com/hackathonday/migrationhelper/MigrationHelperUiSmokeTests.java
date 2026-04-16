@@ -39,10 +39,28 @@ class MigrationHelperUiSmokeTests {
 				.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("Migration Helper")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/styles.css\"")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("src=\"/app.js\"")))
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"archive-scan-form\"")))
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"path-scan-form\"")))
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"scan-detail-drawer\"")))
 				.andExpect(content().string(org.hamcrest.Matchers.containsString("data-endpoint=\"/api/scans\"")));
+	}
+
+	@Test
+	void servesStaticUiAssetsAndMockFixtures() throws Exception {
+		mockMvc.perform(get("/styles.css"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith("text/css"));
+
+		mockMvc.perform(get("/app.js"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith("text/javascript"));
+
+		mockMvc.perform(get("/mock-data/scan-list.json"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$[0].id").value("scan-local-001"));
 	}
 
 	@Test

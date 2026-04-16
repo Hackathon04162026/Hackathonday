@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SupportStatusMapper {
 
-	private static final long EXPIRING_SOON_DAYS = 180;
+	private static final long EXPIRING_SOON_DAYS = 90;
 
 	private final Clock clock;
 
@@ -23,7 +23,7 @@ public class SupportStatusMapper {
 	public SupportState classify(VersionPolicy versionPolicy) {
 		LocalDate today = LocalDate.now(clock);
 		LocalDate supportEndDate = LocalDate.parse(versionPolicy.supportEndDate());
-		if (supportEndDate.isBefore(today)) {
+		if (!today.isBefore(supportEndDate)) {
 			return SupportState.UNSUPPORTED;
 		}
 		long daysRemaining = ChronoUnit.DAYS.between(today, supportEndDate);

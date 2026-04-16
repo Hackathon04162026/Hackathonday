@@ -3,6 +3,7 @@ package com.hackathonday.migrationhelper.policy;
 import com.hackathonday.migrationhelper.api.contract.DetectorFindingResponse;
 import com.hackathonday.migrationhelper.api.contract.PolicyStatusResponse;
 import com.hackathonday.migrationhelper.api.contract.RecommendationResponse;
+import com.hackathonday.migrationhelper.report.PolicyEvaluation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;

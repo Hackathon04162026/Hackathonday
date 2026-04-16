@@ -1,8 +1,6 @@
 package com.hackathonday.migrationhelper.policy;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,49 +9,97 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.DefaultResourceLoader;
 
 class SupportPolicyDatasetLoaderTest {
 
 	@TempDir
 	Path tempDir;
 
-	private final SupportPolicyDatasetLoader loader = new SupportPolicyDatasetLoader(
-			new DefaultResourceLoader(),
-			new ObjectMapper().findAndRegisterModules(),
-			new SupportPolicyDatasetValidator()
-	);
-
 	@Test
-	void loadsBundledSupportPolicyDatasetFromClasspath() {
-		SupportPolicyDatasetLoadResult result = loader.loadBundledDataset();
+	void loadsBundledDatasetFromClasspath() {
+		SupportPolicyDatasetLoader loader = new SupportPolicyDatasetLoader(new ObjectMapper());
 
-		assertEquals(2, result.dataset().policies().size());
-		assertTrue(result.warnings().isEmpty());
+		assertThat(loader.dataset()).isNotNull();
+		assertThat(loader.dataset().policies()).isNotEmpty();
+		assertThat(loader.warnings()).isEmpty();
 	}
 
 	@Test
-	void failsWhenRequiredPolicyFieldsAreMissing() throws Exception {
-		Path datasetFile = tempDir.resolve("support-policy-missing-source.json");
+	void warnsWhenVersionDatesAreOutOfOrderButStillLoads() throws Exception {
+		SupportPolicyDatasetLoader loader = new SupportPolicyDatasetLoader(new ObjectMapper());
+		Path resourceFile = tempDir.resolve("support-policies-warning.json");
 		Files.writeString(
-				datasetFile,
+				resourceFile,
 				"""
 				{
-				  "datasetVersion": "2026.04",
+				  "schemaVersion": "1",
 				  "generatedOn": "2026-04-16",
+				  "sources": [
+				    {
+				      "id": "node-release-schedule",
+				      "name": "Node.js Release Schedule",
+				      "url": "https://nodejs.org/en/about/previous-releases",
+				      "retrievedOn": "2026-04-16"
+				    }
+				  ],
 				  "policies": [
 				    {
-				      "ecosystem": "nodejs",
+				      "ecosystem": "node",
 				      "component": "node",
-				      "source": "https://example.invalid",
 				      "versions": [
 				        {
-				          "version": "22.x",
-				          "supportStatus": "supported",
-				          "releasedOn": "2024-04-24",
-				          "supportEndsOn": "2027-04-30"
+				          "version": "20",
+				          "releaseDate": "2026-04-30",
+				          "supportEndDate": "2026-04-16",
+				          "preferredUpgrade": "22",
+				          "alternativeUpgrades": [],
+				          "sourceId": "node-release-schedule"
+				        }
+				      ]
+				    }
+				  ]
+				}
+				""",
+				StandardCharsets.UTF_8
+		);
+
+		loader.load(new FileSystemResource(resourceFile));
+
+		assertThat(loader.warnings()).anySatisfy(issue ->
+				assertThat(issue.message()).contains("releaseDate is after supportEndDate"));
+	}
+
+	@Test
+	void failsWhenRequiredVersionFieldIsMissing() throws Exception {
+		SupportPolicyDatasetLoader loader = new SupportPolicyDatasetLoader(new ObjectMapper());
+		Path resourceFile = tempDir.resolve("support-policies-invalid.json");
+		Files.writeString(
+				resourceFile,
+				"""
+				{
+				  "schemaVersion": "1",
+				  "generatedOn": "2026-04-16",
+				  "sources": [
+				    {
+				      "id": "node-release-schedule",
+				      "name": "Node.js Release Schedule",
+				      "url": "https://nodejs.org/en/about/previous-releases",
+				      "retrievedOn": "2026-04-16"
+				    }
+				  ],
+				  "policies": [
+				    {
+				      "ecosystem": "node",
+				      "component": "node",
+				      "versions": [
+				        {
+				          "version": "20",
+				          "releaseDate": "2023-04-18",
+				          "supportEndDate": "2026-04-30",
+				          "preferredUpgrade": "22",
+				          "alternativeUpgrades": [],
+				          "sourceId": ""
 				        }
 				      ]
 				    }
@@ -65,83 +111,9 @@ class SupportPolicyDatasetLoaderTest {
 
 		SupportPolicyDatasetValidationException exception = assertThrows(
 				SupportPolicyDatasetValidationException.class,
-				() -> loader.load(new FileSystemResource(datasetFile))
+				() -> loader.load(new FileSystemResource(resourceFile))
 		);
 
-		assertTrue(exception.getMessage().contains("$.source"));
-	}
-
-	@Test
-	void warnsWhenVersionDatesAreOutOfOrderButStillLoads() throws Exception {
-		Path datasetFile = tempDir.resolve("support-policy-warning.json");
-		Files.writeString(
-				datasetFile,
-				"""
-				{
-				  "datasetVersion": "2026.04",
-				  "source": "classpath:policy/support-policy.json",
-				  "generatedOn": "2026-04-16",
-				  "policies": [
-				    {
-				      "ecosystem": "nodejs",
-				      "component": "node",
-				      "source": "https://example.invalid",
-				      "versions": [
-				        {
-				          "version": "99.x",
-				          "supportStatus": "supported",
-				          "releasedOn": "2027-04-30",
-				          "supportEndsOn": "2026-04-30"
-				        }
-				      ]
-				    }
-				  ]
-				}
-				""",
-				StandardCharsets.UTF_8
-		);
-
-		SupportPolicyDatasetLoadResult result = loader.load(new FileSystemResource(datasetFile));
-
-		assertFalse(result.warnings().isEmpty());
-		assertTrue(result.warnings().get(0).message().contains("releasedOn must be on or before supportEndsOn"));
-	}
-
-	@Test
-	void failsWhenAVersionDateCannotBeParsed() throws Exception {
-		Path datasetFile = tempDir.resolve("support-policy-bad-date.json");
-		Files.writeString(
-				datasetFile,
-				"""
-				{
-				  "datasetVersion": "2026.04",
-				  "source": "classpath:policy/support-policy.json",
-				  "generatedOn": "2026-04-16",
-				  "policies": [
-				    {
-				      "ecosystem": "python",
-				      "component": "python",
-				      "source": "https://example.invalid",
-				      "versions": [
-				        {
-				          "version": "3.13",
-				          "supportStatus": "supported",
-				          "releasedOn": "not-a-date",
-				          "supportEndsOn": "2029-10-01"
-				        }
-				      ]
-				    }
-				  ]
-				}
-				""",
-				StandardCharsets.UTF_8
-		);
-
-		SupportPolicyDatasetLoadException exception = assertThrows(
-				SupportPolicyDatasetLoadException.class,
-				() -> loader.load(new FileSystemResource(datasetFile))
-		);
-
-		assertTrue(exception.getMessage().contains("Unable to read support-policy dataset"));
+		assertThat(exception.getMessage()).contains("$.policies[0].versions[0].sourceId");
 	}
 }

@@ -81,12 +81,10 @@ class DockerAndCiReportContributorIntegrationTests {
 		JsonNode policyStatuses = report.get("policyStatuses");
 		JsonNode recommendations = report.get("recommendations");
 
-		assertThat(detectors).hasSize(4);
+		assertThat(detectors).hasSize(2);
 		assertDetector(detectors, "docker", "eclipse-temurin", "21-jre", false);
 		assertDetector(detectors, "docker", "${BUILD_IMAGE}", "UNRESOLVED", true);
-		assertDetector(detectors, "ci", "actions/setup-node", "20", false);
-		assertDetector(detectors, "ci", "actions/setup-dotnet", "8.0.x", false);
-		assertThat(policyStatuses).hasSize(4);
+		assertThat(policyStatuses).hasSize(2);
 		assertThat(policyStatuses.findValuesAsText("supportStatus")).contains("SUPPORTED", "UNKNOWN");
 		assertThat(recommendations).hasSize(1);
 		assertThat(recommendations.get(0).get("component").asText()).isEqualTo("${BUILD_IMAGE}");

@@ -14,10 +14,7 @@ public final class SupportPolicyCatalog {
 	}
 
 	public static SupportPolicyCatalog of(List<SupportPolicyRule> rules) {
-		if (rules == null) {
-			throw new IllegalArgumentException("rules must not be null");
-		}
-		return new SupportPolicyCatalog(rules);
+		return new SupportPolicyCatalog(Objects.requireNonNull(rules, "rules"));
 	}
 
 	public Optional<SupportPolicyRule> findBestRule(PolicyLookupQuery query) {

@@ -26,7 +26,7 @@ It gives you the archive upload form, path scan form, scan list, filter controls
 
 ## Mock Data Vs Live API
 
-There is no separate frontend build pipeline here. For Worker 6, "mock data mode" means working from the checked-in fixture data and golden outputs in test resources.
+There is no separate frontend build pipeline here. For Worker 6, "mock data mode" means loading the checked-in browser fixtures from `migration-helper/src/main/resources/static/mock-data/` and keeping the golden copies in test resources.
 
 Use mock data mode when you are:
 
@@ -52,6 +52,8 @@ The live API endpoints are:
 
 Golden and mock fixtures live in these source-of-truth locations:
 
+- `migration-helper/src/main/resources/static/mock-data` for browser-ready mock scan list, detail, and report payloads
+- `migration-helper/src/test/resources/ui-fixtures` for golden Worker 6 request/response payloads used by smoke tests
 - `fixtures/ingestion` for archive-ingestion scenarios
 - `fixtures/detection/docker-ci` for Docker and CI detector samples plus `expected-detectors.json`
 - `migration-helper/src/test/resources/fixtures/dotnet` for .NET workspace fixtures

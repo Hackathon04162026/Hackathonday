@@ -1,6 +1,7 @@
 package com.hackathonday.migrationhelper.policy;
 
 import java.util.List;
+import java.util.Objects;
 
 public record SupportPolicyRule(
 		String ecosystem,
@@ -24,13 +25,9 @@ public record SupportPolicyRule(
 		versionPrefix = normalizeOptional(versionPrefix);
 		recommendedVersion = normalizeOptional(recommendedVersion);
 		alternativeVersions = List.copyOf(alternativeVersions == null ? List.of() : alternativeVersions);
-		if (supportStatus == null) {
-			throw new IllegalArgumentException("supportStatus must not be null");
-		}
-		if (sourceMetadata == null) {
-			throw new IllegalArgumentException("sourceMetadata must not be null");
-		}
-		validateVersionSelector();
+		supportStatus = Objects.requireNonNull(supportStatus, "supportStatus");
+		sourceMetadata = Objects.requireNonNull(sourceMetadata, "sourceMetadata");
+		validateVersionSelector(exactVersion, minimumVersion, maximumVersion, versionPrefix);
 	}
 
 	public boolean matches(PolicyLookupQuery query) {
@@ -93,7 +90,7 @@ public record SupportPolicyRule(
 		return 50;
 	}
 
-	private void validateVersionSelector() {
+	private void validateVersionSelector(String exactVersion, String minimumVersion, String maximumVersion, String versionPrefix) {
 		int selectors = 0;
 		if (!exactVersion.isBlank()) {
 			selectors++;

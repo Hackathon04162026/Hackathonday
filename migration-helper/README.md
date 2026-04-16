@@ -15,7 +15,8 @@ Open `http://localhost:8080/` after the app starts.
 ## UI shell
 
 The browser shell is the static page at `src/main/resources/static/index.html`.
-It covers archive upload, path scans, scan history, filters, detail drawer, and JSON export actions.
+It now ships with `styles.css`, `app.js`, and browser-ready mock payloads under `src/main/resources/static/mock-data/`.
+The shell covers archive upload, path scans, scan history, result filtering, the detail drawer, and JSON export actions.
 
 ## API endpoints
 

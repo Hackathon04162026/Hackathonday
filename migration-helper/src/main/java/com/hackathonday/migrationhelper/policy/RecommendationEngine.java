@@ -1,9 +1,7 @@
 package com.hackathonday.migrationhelper.policy;
 
 import com.hackathonday.migrationhelper.api.contract.RecommendationResponse;
-import java.time.Clock;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -13,15 +11,9 @@ import org.springframework.stereotype.Component;
 public class RecommendationEngine {
 
 	private final SupportStatusMapper statusMapper;
-	private final Clock clock;
 
 	public RecommendationEngine(SupportStatusMapper statusMapper) {
-		this(statusMapper, Clock.systemUTC());
-	}
-
-	RecommendationEngine(SupportStatusMapper statusMapper, Clock clock) {
 		this.statusMapper = statusMapper;
-		this.clock = clock;
 	}
 
 	public RecommendationResponse recommendForKnownVersion(PolicyMatch match, String currentVersion) {
@@ -37,7 +29,7 @@ public class RecommendationEngine {
 				currentVersion,
 				recommended,
 				alternatives,
-				rationaleForKnownVersion(match.versionPolicy(), state, recommended)
+				rationaleForKnownVersion(match.versionPolicy(), state, recommended, alternatives)
 		);
 	}
 
@@ -47,6 +39,7 @@ public class RecommendationEngine {
 			return null;
 		}
 		List<String> alternatives = componentPolicy.versions().stream()
+				.filter(versionPolicy -> statusMapper.classify(versionPolicy) != SupportState.UNSUPPORTED)
 				.map(VersionPolicy::version)
 				.filter(version -> !version.equals(recommended))
 				.sorted((left, right) -> PolicyLookupService.compareVersions(right, left))
@@ -58,8 +51,7 @@ public class RecommendationEngine {
 				currentVersion,
 				recommended,
 				alternatives,
-				"Version " + currentVersion + " is not mapped in the bundled support policy dataset. Prefer " + recommended
-						+ " because it is the newest supported policy line."
+				rationaleForUnknownVersion(currentVersion, recommended, alternatives)
 		);
 	}
 
@@ -92,17 +84,33 @@ public class RecommendationEngine {
 		return alternatives.stream().limit(3).toList();
 	}
 
-	private String rationaleForKnownVersion(VersionPolicy versionPolicy, SupportState state, String recommended) {
+	private String rationaleForKnownVersion(VersionPolicy versionPolicy, SupportState state, String recommended,
+			List<String> alternatives) {
 		LocalDate supportEndDate = LocalDate.parse(versionPolicy.supportEndDate());
-		return switch (state) {
+		String rationale = switch (state) {
 			case SUPPORTED -> versionPolicy.version() + " is currently supported through " + supportEndDate
-					+ ". Prefer " + recommended + " as the next target to stay on a supported line.";
+					+ "; prefer " + recommended + " as the next target.";
 			case EXPIRING_SOON -> versionPolicy.version() + " support ends on " + supportEndDate
-					+ ". Prefer " + recommended + " before the support window closes.";
+					+ "; prefer " + recommended + " before the support window closes.";
 			case UNSUPPORTED -> versionPolicy.version() + " has been unsupported since " + supportEndDate
-					+ ". Prefer " + recommended + " for an actively supported upgrade path.";
+					+ "; prefer " + recommended + " for an actively supported upgrade path.";
 			case UNKNOWN_VERSION -> "Version " + versionPolicy.version()
 					+ " is not mapped in the bundled support policy dataset.";
 		};
+		return appendAlternatives(rationale, alternatives);
+	}
+
+	private String rationaleForUnknownVersion(String currentVersion, String recommended, List<String> alternatives) {
+		String rationale = "Version " + currentVersion
+				+ " is not mapped in the bundled support policy dataset; prefer " + recommended
+				+ " because it is the newest supported policy line.";
+		return appendAlternatives(rationale, alternatives);
+	}
+
+	private String appendAlternatives(String rationale, List<String> alternatives) {
+		if (alternatives == null || alternatives.isEmpty()) {
+			return rationale;
+		}
+		return rationale + " Alternatives: " + String.join(", ", alternatives) + ".";
 	}
 }
