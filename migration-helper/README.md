@@ -25,6 +25,8 @@ The static site is emitted to `dist/`. Because the Vite config uses a relative `
 
 The app is fully self-contained and reads its sample scan data from `public/mock-data/`.
 
+The static build is designed for GitHub Pages and other simple file hosts.
+
 ## Tests
 
 - `npm test` runs the React helper tests.
