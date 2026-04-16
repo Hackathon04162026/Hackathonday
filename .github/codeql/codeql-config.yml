@@ -1,0 +1,11 @@
+paths:
+  - migration-helper
+  - plugins
+  - scripts
+paths-ignore:
+  - "**/node_modules"
+  - "**/dist"
+  - "**/target"
+  - "docs"
+  - "fixtures"
+  - "sample-projects"
