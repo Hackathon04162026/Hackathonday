@@ -52,8 +52,8 @@ Completed based on repo:
 - Ecosystem-specific fixtures/tests exist for Python, .NET, Go, and Docker/CI.
 
 Still incomplete or off-plan:
-- Python, .NET, Docker, and CI are implemented as report contributors instead of first-class detector SPI implementations, which does not fully match the worker assignment.
-- Because these ecosystems bypass the shared detector SPI directly, this is only partially aligned with the planned handoff from Worker 3.
+- Python and .NET still enter the pipeline through report contributors instead of the same first-class detector SPI pattern used by Worker 3.
+- The live report path does not yet mirror the richer CI/policy end state represented in the checked-in mock report.
 
 ### Worker 5: Support Policy and Recommendations
 Status: Partial
@@ -62,31 +62,30 @@ Completed based on repo:
 - Bundled support-policy dataset and policy domain model exist under `migration-helper/src/main/java/com/hackathonday/migrationhelper/policy/` and `src/main/resources/policy/`.
 - Lookup, support status calculation, and recommendation-oriented service classes are present.
 - Policy-focused tests exist, including `PolicySupportStatusCalculatorTest`.
+- The report pipeline now evaluates detector findings through `DetectorFindingPolicyEvaluator` and `PolicyEvaluationService`.
 
 Still incomplete or broken:
-- The current repo does not compile: `PolicyRecommendationService.java` calls `SupportStatus.responseValue()`, but `SupportStatus.java` only defines `value()`.
-- `SupportPolicyDatasetLoader` expects `classpath:policy/support-policy.json`, but the bundled file in the repo is `support-policy-catalog.json`.
-- `DetectorFindingPolicyEvaluator` is still placeholder-style logic and does not appear to use the richer catalog/lookup/recommendation services.
-- The report pipeline therefore does not yet reflect the planned supported / expiring soon / unsupported / unknown-version mapping end to end.
+- The bundled policy catalog still does not cover every detector ecosystem that appears in the mock UI data, so some live report paths remain unmapped.
+- The report pipeline still has a coverage gap between detector output richness and policy status/recommendation coverage across the full product surface.
 
 ### Worker 6: UI, Test Harness, and Developer Experience
-Status: Minimal
+Status: Partial
 
 Completed based on repo:
+- A thin static UI exists under `migration-helper/src/main/resources/static/` with `index.html`, `app.js`, and `styles.css`.
+- Mock UI fixtures exist under `migration-helper/src/main/resources/static/mock-data/`.
+- A UI smoke test exists in `src/test/java/com/hackathonday/migrationhelper/MigrationHelperUiSmokeTests.java`.
 - Basic developer documentation exists in `migration-helper/README.md`.
-- Some backend-oriented tests and fixtures exist.
 
 Still incomplete or not found:
-- No thin web UI implementation was found under `src/main/resources/static` or `templates`.
-- No mocked UI shell, live UI wiring, results table, detail drawer, or JSON export UI was found.
-- No end-to-end UI test harness or golden report suite was found.
+- The mock-mode shell still drives most of the UX verification.
+- There is no fully separate end-to-end browser harness or golden-report suite beyond the current smoke tests and fixtures.
 
 ## Overall Readout
 
 - Clearly completed: Worker 3.
-- Substantially present but incomplete: Workers 1, 2, 4, and 5.
-- Barely started in repo terms: Worker 6.
-- Current repo health issue: `migration-helper` fails to compile as of 2026-04-16, so the implementation is not yet in a green state.
+- Substantially present but incomplete: Workers 1, 2, 4, 5, and 6.
+- Current repo health: the checked-in test suite passes as of 2026-04-16, but several plan items are still only partially complete.
 
 ## Worker 1: Platform and API Core
 - Own the Java app skeleton, application bootstrap, configuration model, scan lifecycle state, and shared REST endpoints.

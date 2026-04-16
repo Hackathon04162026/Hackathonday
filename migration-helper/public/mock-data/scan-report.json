@@ -1,0 +1,49 @@
+{
+  "id": "scan-local-001",
+  "applicationName": "Migration Helper",
+  "status": "COMPLETED",
+  "generatedAt": "2026-04-16T17:38:13Z",
+  "metadata": {
+    "sourceType": "LOCAL_PATH",
+    "sourceReference": "/workspace/source/monorepo",
+    "requestedBy": "alex",
+    "createdAt": "2026-04-16T17:32:00Z",
+    "startedAt": "2026-04-16T17:32:18Z",
+    "completedAt": "2026-04-16T17:38:12Z"
+  },
+  "workspace": {
+    "normalizedWorkspacePath": "/workspace/monorepo",
+    "normalizationStatus": "NORMALIZED"
+  },
+  "warnings": [
+    {
+      "code": "WORKSPACE_NORMALIZED",
+      "severity": "INFO",
+      "message": "Workspace path normalized to /workspace/monorepo"
+    }
+  ],
+  "detectors": [
+    { "ecosystem": "docker", "component": "eclipse-temurin", "detectedVersion": "21-jre", "confidence": "HIGH", "indirect": false },
+    { "ecosystem": "docker", "component": "${BUILD_IMAGE}", "detectedVersion": "UNRESOLVED", "confidence": "LOW", "indirect": true },
+    { "ecosystem": "ci", "component": "actions/setup-node", "detectedVersion": "20", "confidence": "HIGH", "indirect": false },
+    { "ecosystem": "python", "component": "fastapi", "detectedVersion": "0.110.0", "confidence": "HIGH", "indirect": false },
+    { "ecosystem": "go", "component": "github.com/google/uuid", "detectedVersion": "v1.6.0", "confidence": "HIGH", "indirect": false }
+  ],
+  "policyStatuses": [
+    { "ecosystem": "ci", "component": "actions/setup-node", "version": "20", "supportStatus": "SUPPORTED", "source": "detector-explicit" },
+    { "ecosystem": "docker", "component": "${BUILD_IMAGE}", "version": "UNRESOLVED", "supportStatus": "UNKNOWN", "source": "detector-indirect" },
+    { "ecosystem": "docker", "component": "eclipse-temurin", "version": "21-jre", "supportStatus": "SUPPORTED", "source": "detector-explicit" },
+    { "ecosystem": "go", "component": "github.com/google/uuid", "version": "v1.6.0", "supportStatus": "SUPPORTED", "source": "detector-explicit" },
+    { "ecosystem": "python", "component": "fastapi", "version": "0.110.0", "supportStatus": "SUPPORTED", "source": "detector-explicit" }
+  ],
+  "recommendations": [
+    {
+      "ecosystem": "docker",
+      "component": "${BUILD_IMAGE}",
+      "currentVersion": "UNRESOLVED",
+      "recommendedVersion": "UNRESOLVED",
+      "alternativeVersions": [],
+      "rationale": "Scan scan-local-001: Resolve the indirect version reference before policy approval."
+    }
+  ]
+}

@@ -1,31 +1,34 @@
 # Migration Helper
 
-Worker 6 owns the UI shell, local test harness, and developer docs for this app.
+This repo is now a frontend-only React + Vite app built for static hosting.
 
-## Run locally
+## Run the React app
 
 From `migration-helper/`:
 
 ```powershell
-.\mvnw.cmd spring-boot:run
+npm install
+npm run dev
 ```
 
-Open `http://localhost:8080/` after the app starts.
+Open the local Vite URL after the dev server starts.
 
-## UI shell
+## Build for static hosting
 
-The browser shell is the static page at `src/main/resources/static/index.html`.
-It now ships with `styles.css`, `app.js`, and browser-ready mock payloads under `src/main/resources/static/mock-data/`.
-The shell covers archive upload, path scans, scan history, result filtering, the detail drawer, and JSON export actions.
+```powershell
+npm run build
+```
 
-## API endpoints
+The static site is emitted to `dist/`. Because the Vite config uses a relative `base`, the output can be deployed to common static hosts without rewriting asset URLs.
 
-- `POST /api/scans`
-- `POST /api/scans/path`
-- `GET /api/scans`
-- `GET /api/scans/{id}`
-- `GET /api/scans/{id}/report`
+## Data model
+
+The app is fully self-contained and reads its sample scan data from `public/mock-data/`.
+
+## Tests
+
+- `npm test` runs the React helper tests.
 
 ## Where to look next
 
-For day-to-day Worker 6 setup, mock-data workflow, live API mode, and fixture locations, read [docs/worker-6-dev-experience.md](../docs/worker-6-dev-experience.md).
+For day-to-day setup, mock-data workflow, and fixture locations, read [docs/worker-6-dev-experience.md](../docs/worker-6-dev-experience.md).

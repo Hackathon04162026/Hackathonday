@@ -1,9 +1,0 @@
-pyproject.toml:3|python-runtime|>=3.11|true|MEDIUM
-pyproject.toml:5|fastapi|0.115.2|false|HIGH
-pyproject.toml:6|httpx|>=0.27|true|MEDIUM
-pyproject.toml:10|python-runtime|3.12.1|false|HIGH
-pyproject.toml:11|uvicorn|^0.30.6|true|MEDIUM
-services/api/requirements.txt:1|django|4.2.16|false|HIGH
-services/api/requirements.txt:2|requests|>=2.31|true|MEDIUM
-tools/cli/Pipfile:2|python-runtime|3.11|false|HIGH
-tools/cli/Pipfile:5|pydantic|2.8.2|false|HIGH

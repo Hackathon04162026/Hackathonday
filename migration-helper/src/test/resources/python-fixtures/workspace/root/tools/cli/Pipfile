@@ -1,5 +1,0 @@
-[requires]
-python_version = "3.11"
-
-[packages]
-pydantic = "==2.8.2"
