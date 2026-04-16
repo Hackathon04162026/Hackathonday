@@ -1,0 +1,47 @@
+{
+  "selectedPlanId": "plan-planning-hub",
+  "plans": [
+    {
+      "id": "plan-planning-hub",
+      "displayName": "Migration Planning Hub",
+      "programLead": "A. Johnson",
+      "stage": "FEATURE_REVIEW",
+      "epicCount": 3,
+      "featureCount": 5,
+      "storyCount": 8,
+      "updatedAt": "2026-04-15T15:10:00Z",
+      "reviewCheckpoints": [
+        { "stage": "epics", "status": "approved" },
+        { "stage": "features", "status": "pending" }
+      ]
+    },
+    {
+      "id": "plan-onboarding-ramp",
+      "displayName": "New Hire Ramp",
+      "programLead": "M. Rivera",
+      "stage": "EPIC_REVIEW",
+      "epicCount": 2,
+      "featureCount": 4,
+      "storyCount": 6,
+      "updatedAt": "2026-04-14T11:20:00Z",
+      "reviewCheckpoints": [
+        { "stage": "epics", "status": "pending" },
+        { "stage": "features", "status": "pending" }
+      ]
+    },
+    {
+      "id": "plan-qe-guardrails",
+      "displayName": "QE Guardrails",
+      "programLead": "S. Patel",
+      "stage": "STORY_READY",
+      "epicCount": 4,
+      "featureCount": 7,
+      "storyCount": 11,
+      "updatedAt": "2026-04-13T09:45:00Z",
+      "reviewCheckpoints": [
+        { "stage": "epics", "status": "approved" },
+        { "stage": "features", "status": "approved" }
+      ]
+    }
+  ]
+}

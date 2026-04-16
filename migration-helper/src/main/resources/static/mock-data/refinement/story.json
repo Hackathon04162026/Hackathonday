@@ -1,0 +1,39 @@
+{
+  "stories": [
+    {
+      "problemStatement": "The refinement session notes mix backlog changes, implementation questions, and approval concerns, which makes it hard to convert them into a sprint-ready story. This slows down handoff to delivery and increases the chance that important constraints are lost.",
+      "storySummary": "As a refinement facilitator, I want to turn messy notes into a structured user story so that I can help the team review, estimate, and commit with less rework.",
+      "acceptanceCriteria": [
+        "Given messy notes are provided, when the facilitator runs refinement, then the response includes the required sections in the exact order.",
+        "Should flag any mismatch between the problem statement and the proposed story before the final story is written.",
+        "Should include dependencies, references, estimation, and DoR validation even when some values are missing."
+      ],
+      "dependencies": [
+        "A program lead vision or backlog discussion notes",
+        "A parent epic link from the planning workspace"
+      ],
+      "references": [
+        "Confluence: Refinement Facilitation Playbook",
+        "Confluence: Definition of Ready"
+      ],
+      "estimation": "3 points",
+      "definitionOfReadyValidation": [
+        "Problem statement present and aligned with story",
+        "User story follows As a / I want / So that format",
+        "⚠️ DoR GAP: Sprint identifier not provided",
+        "⚠️ DoR GAP: Label not provided"
+      ],
+      "parentEpicLink": "EPIC-REFINE-001",
+      "label": "refinement-facilitation",
+      "sprint": "Sprint 12",
+      "gaps": [
+        "⚠️Clarification needed: confirm the target role for the story.",
+        "No sample epics were included in the notes."
+      ],
+      "normalizationNotes": [
+        "Converted informal notes into one sprint-sized story.",
+        "Preserved the requested output order."
+      ]
+    }
+  ]
+}

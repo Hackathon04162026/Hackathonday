@@ -1,0 +1,319 @@
+{
+  "planning": {
+    "vision": {
+      "programLead": "Morgan Reed",
+      "statement": "Reduce migration risk by turning the program lead vision into reviewed epics, approved features, and sprint-ready stories.",
+      "objective": "Break the vision into epics, review each gate, and only create the next level of backlog items after approval."
+    },
+    "reviewStages": [
+      {
+        "stage": "Vision intake",
+        "status": "Captured",
+        "owner": "Program lead",
+        "decision": "Ready for epic shaping"
+      },
+      {
+        "stage": "Epic review",
+        "status": "Approved",
+        "owner": "Product owner",
+        "decision": "Approved for feature creation"
+      },
+      {
+        "stage": "Feature review",
+        "status": "Approved",
+        "owner": "Delivery lead",
+        "decision": "Approved for story creation"
+      },
+      {
+        "stage": "Story readiness",
+        "status": "Ready",
+        "owner": "Agile team",
+        "decision": "Ready for sprint commitment"
+      }
+    ],
+    "epics": [
+      {
+        "id": "EPIC-001",
+        "title": "Planning workflow",
+        "status": "Approved",
+        "summary": "Capture the vision and move it through review gates before new work is broken down."
+      },
+      {
+        "id": "EPIC-002",
+        "title": "Confluence-grounded onboarding",
+        "status": "Approved",
+        "summary": "Surface the onboarding agent and document-first guidance inside the workspace."
+      }
+    ],
+    "features": [
+      {
+        "id": "FEAT-101",
+        "epicId": "EPIC-001",
+        "title": "Review gate orchestration",
+        "status": "Approved",
+        "summary": "Gate the movement from vision to epics, then features, then stories."
+      },
+      {
+        "id": "FEAT-102",
+        "epicId": "EPIC-001",
+        "title": "Story readiness checks",
+        "status": "Approved",
+        "summary": "Hold stories until the Definition of Ready is satisfied."
+      },
+      {
+        "id": "FEAT-201",
+        "epicId": "EPIC-002",
+        "title": "Onboarding question flow",
+        "status": "Approved",
+        "summary": "Guide new joiners through role, tenure, and document-backed answers."
+      }
+    ],
+    "stories": [
+      {
+        "id": "STORY-201",
+        "featureId": "FEAT-101",
+        "title": "Review epics before feature creation",
+        "status": "Ready for sprint",
+        "points": 3
+      },
+      {
+        "id": "STORY-202",
+        "featureId": "FEAT-102",
+        "title": "Validate story readiness inputs",
+        "status": "Ready for sprint",
+        "points": 2
+      },
+      {
+        "id": "STORY-203",
+        "featureId": "FEAT-201",
+        "title": "Guide first-week onboarding",
+        "status": "Ready for sprint",
+        "points": 3
+      }
+    ]
+  },
+  "refinement": {
+    "source": "Backlog refinement session",
+    "problemStatement": "The team is working from messy notes, so the backlog is hard to read, hard to size, and difficult to commit to in sprint planning.",
+    "storySummary": "As a refinement facilitator, I want to convert messy notes into a structured, sprint-ready story so that the team can review the work quickly and commit with confidence.",
+    "acceptanceCriteria": [
+      "Given refinement notes, when the facilitator normalizes the content, then the output keeps the exact problem statement, story summary, acceptance criteria, dependencies, references, estimation, DoR validation, gaps, and normalization notes order.",
+      "Should flag any misalignment between the problem statement and the proposed story before the story is presented for sprint commitment.",
+      "Should preserve tool names, environments, and API references when they are mentioned in the notes."
+    ],
+    "dependencies": [
+      "Program lead vision or backlog notes",
+      "Parent epic link",
+      "Sprint target",
+      "Label for the resulting story"
+    ],
+    "references": [
+      "Refinement notes from the backlog session",
+      "Confluence refinement summary"
+    ],
+    "estimation": "3 points",
+    "definitionOfReadyValidation": [
+      "Problem statement present and aligned with the story",
+      "User story follows As a / I want / So that format",
+      "Acceptance criteria are present and testable",
+      "Dependencies discussed",
+      "Estimation is 5 points or less",
+      "Parent Epic Link identified",
+      "Label added",
+      "Sprint identified"
+    ],
+    "gaps": [
+      "None identified during refinement — verify before sprint commitment"
+    ],
+    "normalizationNotes": [
+      "Reordered the output to match the story template exactly.",
+      "Preserved technical specificity from the notes.",
+      "Called out readiness gaps separately from the story body."
+    ],
+    "parentEpicLink": "EPIC-001",
+    "labels": [
+      "refinement",
+      "ready"
+    ],
+    "sprint": "Sprint 12"
+  },
+  "testCases": {
+    "summary": {
+      "totalTestCases": 6,
+      "positive": 2,
+      "negative": 2,
+      "edgeCases": 2,
+      "gaps": [
+        "No performance/load scenarios were discussed during refinement."
+      ]
+    },
+    "testSuites": [
+      {
+        "name": "Refinement story normalization",
+        "acceptanceCriterion": "Given refinement notes, when the facilitator normalizes the content, then the output keeps the exact story structure.",
+        "testCases": [
+          {
+            "id": "TC-001",
+            "priority": "High",
+            "type": "Positive",
+            "preconditions": [
+              "A messy refinement session summary exists"
+            ],
+            "steps": [
+              "Open the refinement panel",
+              "Load the sample notes"
+            ],
+            "expectedResult": "The structured story uses the exact output order and preserves the original context.",
+            "testData": "Backlog notes with a problem statement, story summary, and acceptance criteria"
+          },
+          {
+            "id": "TC-002",
+            "priority": "High",
+            "type": "Negative",
+            "preconditions": [
+              "A story with mismatched problem and summary text exists"
+            ],
+            "steps": [
+              "Load the conflicting story example",
+              "Review the output warnings"
+            ],
+            "expectedResult": "The UI surfaces an explicit clarification warning about the mismatch.",
+            "testData": "Problem X with a story summary about Y"
+          },
+          {
+            "id": "TC-003",
+            "priority": "Medium",
+            "type": "Edge Case",
+            "preconditions": [
+              "The notes contain only partial context"
+            ],
+            "steps": [
+              "Load sparse notes",
+              "Inspect the generated readiness gaps"
+            ],
+            "expectedResult": "Missing items are called out as DoR gaps instead of being invented.",
+            "testData": "Notes with only dependencies and a sprint target"
+          }
+        ]
+      },
+      {
+        "name": "QE test case generation",
+        "acceptanceCriterion": "Given acceptance criteria, when the generator produces test cases, then each criterion has positive, negative, and edge coverage.",
+        "testCases": [
+          {
+            "id": "TC-004",
+            "priority": "High",
+            "type": "Positive",
+            "preconditions": [
+              "A story with clear acceptance criteria exists"
+            ],
+            "steps": [
+              "Open the test case generator",
+              "Load the sample criteria"
+            ],
+            "expectedResult": "At least one happy-path test case is generated for each criterion.",
+            "testData": "Three acceptance criteria from the refinement story"
+          },
+          {
+            "id": "TC-005",
+            "priority": "Medium",
+            "type": "Negative",
+            "preconditions": [
+              "An untestable acceptance criterion exists"
+            ],
+            "steps": [
+              "Load the vague criterion",
+              "Review the generated output"
+            ],
+            "expectedResult": "The output flags the criterion as untestable and suggests a rewrite.",
+            "testData": "Criterion: should work properly"
+          },
+          {
+            "id": "TC-006",
+            "priority": "Low",
+            "type": "Edge Case",
+            "preconditions": [
+              "Boundary values and empty inputs are mentioned"
+            ],
+            "steps": [
+              "Generate cases from boundary criteria",
+              "Inspect the numbering"
+            ],
+            "expectedResult": "Boundary and edge cases are present and the test IDs remain sequential.",
+            "testData": "Zero, max, and max+1 inputs"
+          }
+        ]
+      }
+    ]
+  },
+  "onboarding": {
+    "agentName": "Confluence-grounded Onboarding Agent",
+    "firstInteraction": [
+      "What is your role?",
+      "Is this your first week, or have you been here a bit and have specific questions?"
+    ],
+    "answers": [
+      {
+        "role": "Developer",
+        "journeyType": "FIRST_WEEK",
+        "question": "How do I set up my dev environment?",
+        "answer": "Install the repo prerequisites, request the listed access, and follow the team onboarding notes before your first contribution.",
+        "citedDocuments": [
+          {
+            "documentName": "Team onboarding guide",
+            "section": "Tools and access",
+            "owner": "Platform",
+            "channel": "#team-platform",
+            "updatedOn": "2026-04-10",
+            "outdated": false
+          },
+          {
+            "documentName": "Local development checklist",
+            "section": "Codebase and architecture",
+            "owner": "Engineering",
+            "channel": "#engineering",
+            "updatedOn": "2026-04-09",
+            "outdated": false
+          }
+        ],
+        "warnings": [],
+        "nextQuestions": [
+          "Want me to walk you through the full setup steps?"
+        ],
+        "suggestedEscalation": "Ask the team lead if repo access is missing."
+      },
+      {
+        "role": "Tester",
+        "journeyType": "SPECIFIC_QUESTION",
+        "question": "What is our branching strategy?",
+        "answer": "Use the shared feature branch flow, keep pull requests small, and ask for review before merging.",
+        "citedDocuments": [
+          {
+            "documentName": "Delivery playbook",
+            "section": "Pull request process",
+            "owner": "QA",
+            "channel": "#qe",
+            "updatedOn": "2026-03-27",
+            "outdated": false
+          },
+          {
+            "documentName": "Branching and release notes",
+            "section": "Source control",
+            "owner": "Engineering",
+            "channel": "#engineering",
+            "updatedOn": "2025-12-18",
+            "outdated": true
+          }
+        ],
+        "warnings": [
+          "Branching and release notes may be outdated - verify with your team lead."
+        ],
+        "nextQuestions": [
+          "Want me to point you to the review checklist?"
+        ],
+        "suggestedEscalation": "Ask the scrum master if the team needs a release-specific branching exception."
+      }
+    ],
+    "fallback": "I couldn't find this in our documentation. You may want to ask your team lead or #team-platform."
+  }
+}

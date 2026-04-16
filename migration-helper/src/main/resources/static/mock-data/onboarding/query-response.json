@@ -1,0 +1,21 @@
+{
+  "answer": "For a new developer in week one, start with the team overview, request the right tool access, and then complete the local setup steps from the onboarding guide. The most relevant documents I found are the Team Onboarding Guide and the Developer Environment Checklist.",
+  "citedDocuments": [
+    {
+      "name": "Team Onboarding Guide",
+      "path": "SharePoint/Engineering/Team Onboarding Guide.md"
+    },
+    {
+      "name": "Developer Environment Checklist",
+      "path": "SharePoint/Engineering/Developer Environment Checklist.md"
+    }
+  ],
+  "warnings": [
+    "⚠️ Note: The Developer Environment Checklist may be outdated — verify with your team lead."
+  ],
+  "nextQuestions": [
+    "Which repository are you joining first?",
+    "Do you already have Jira and Git access?"
+  ],
+  "suggestedEscalation": "Ask the Scrum Master or team lead if the access request is blocked."
+}

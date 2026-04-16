@@ -1,0 +1,149 @@
+{
+  "id": "plan-planning-hub",
+  "displayName": "Migration Planning Hub",
+  "programLead": "A. Johnson",
+  "targetUsers": [
+    "Program leads",
+    "Reviewers",
+    "Engineers"
+  ],
+  "vision": "Transform backlog refinement, review approvals, QE generation, and onboarding into a single guided workspace so the team can move from idea to sprint-ready work without losing context.",
+  "desiredOutcomes": [
+    "Vision input is captured once and reused across planning stages.",
+    "Review gates stay visible before epics, features, and stories are approved.",
+    "Refinement notes become sprint-ready stories with explicit DoR checks."
+  ],
+  "stage": "FEATURE_REVIEW",
+  "updatedAt": "2026-04-15T15:10:00Z",
+  "reviewCheckpoints": [
+    {
+      "stage": "epics",
+      "label": "Epic review",
+      "status": "approved",
+      "notes": "Epics are aligned with the program lead vision."
+    },
+    {
+      "stage": "features",
+      "label": "Feature review",
+      "status": "pending",
+      "notes": "Awaiting reviewer sign-off before stories are created."
+    }
+  ],
+  "epics": [
+    {
+      "id": "EPI-001",
+      "title": "Capture program vision",
+      "summary": "Collect the program lead vision and normalize it into planning inputs.",
+      "status": "approved",
+      "featureCount": 2
+    },
+    {
+      "id": "EPI-002",
+      "title": "Manage review gates",
+      "summary": "Track approval checkpoints before the backlog moves forward.",
+      "status": "in_progress",
+      "featureCount": 2
+    },
+    {
+      "id": "EPI-003",
+      "title": "Enable onboarding and QE helpers",
+      "summary": "Provide document-grounded onboarding and automated test case generation.",
+      "status": "draft",
+      "featureCount": 1
+    }
+  ],
+  "features": [
+    {
+      "id": "FEA-101",
+      "title": "Vision intake form",
+      "summary": "Capture the vision, target users, and outcomes from the program lead.",
+      "status": "approved",
+      "storyCount": 2,
+      "owner": "Product"
+    },
+    {
+      "id": "FEA-102",
+      "title": "Review checkpoint board",
+      "summary": "Show epic and feature reviews before advancing work.",
+      "status": "approved",
+      "storyCount": 2,
+      "owner": "Delivery"
+    },
+    {
+      "id": "FEA-103",
+      "title": "Refinement facilitation",
+      "summary": "Turn messy notes into a sprint-ready user story package.",
+      "status": "draft",
+      "storyCount": 2,
+      "owner": "Agile Coach"
+    },
+    {
+      "id": "FEA-104",
+      "title": "Test case generator",
+      "summary": "Generate positive, negative, and edge-case tests from acceptance criteria.",
+      "status": "draft",
+      "storyCount": 1,
+      "owner": "QE"
+    },
+    {
+      "id": "FEA-105",
+      "title": "Confluence-grounded onboarding agent",
+      "summary": "Answer first-week questions using checked-in documentation first.",
+      "status": "draft",
+      "storyCount": 1,
+      "owner": "Enablement"
+    }
+  ],
+  "stories": [
+    {
+      "id": "STO-201",
+      "title": "Submit the planning vision",
+      "summary": "Create a plan from the program lead vision and selected target users.",
+      "status": "approved",
+      "points": 2
+    },
+    {
+      "id": "STO-202",
+      "title": "Approve epic review",
+      "summary": "Allow reviewers to approve epic decomposition after the vision is captured.",
+      "status": "approved",
+      "points": 2
+    },
+    {
+      "id": "STO-203",
+      "title": "Approve feature review",
+      "summary": "Gate story creation until feature review is complete.",
+      "status": "in_progress",
+      "points": 2
+    },
+    {
+      "id": "STO-204",
+      "title": "Run refinement facilitation",
+      "summary": "Transform refinement notes into the exact structured story format.",
+      "status": "draft",
+      "points": 3
+    },
+    {
+      "id": "STO-205",
+      "title": "Generate executable test cases",
+      "summary": "Create QE-ready cases from acceptance criteria with coverage gaps called out.",
+      "status": "draft",
+      "points": 3
+    },
+    {
+      "id": "STO-206",
+      "title": "Answer onboarding questions",
+      "summary": "Return document-backed onboarding guidance with citations.",
+      "status": "draft",
+      "points": 2
+    }
+  ],
+  "onboardingChecklist": [
+    "Team overview and key contacts",
+    "Tools and access setup",
+    "Ceremonies and rituals",
+    "Codebase and architecture",
+    "Definition of Done and Definition of Ready",
+    "First contribution and review norms"
+  ]
+}

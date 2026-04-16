@@ -1,0 +1,130 @@
+{
+  "summary": {
+    "totalTestCases": 6,
+    "positive": 2,
+    "negative": 2,
+    "edgeCases": 2,
+    "gaps": [
+      "The story does not mention performance expectations.",
+      "The story does not specify who approves the generated output."
+    ]
+  },
+  "testSuites": [
+    {
+      "name": "Refinement output coverage",
+      "acceptanceCriterion": "The response includes the required sections in the exact order.",
+      "testCases": [
+        {
+          "id": "TC-001",
+          "name": "Render all refinement sections",
+          "priority": "High",
+          "type": "Positive",
+          "preconditions": [
+            "A refinement note set is available.",
+            "The refinement panel is open."
+          ],
+          "steps": [
+            "Paste messy notes into the refinement form.",
+            "Submit the refinement request."
+          ],
+          "expectedResult": "The response includes the required sections in the requested order.",
+          "testData": [
+            "Refinement notes from a backlog discussion"
+          ]
+        },
+        {
+          "id": "TC-002",
+          "name": "Reject missing notes",
+          "priority": "High",
+          "type": "Negative",
+          "preconditions": [
+            "The refinement form is open."
+          ],
+          "steps": [
+            "Leave the notes blank.",
+            "Submit the refinement form."
+          ],
+          "expectedResult": "The UI blocks submission and asks for notes before refinement can continue.",
+          "testData": [
+            ""
+          ]
+        },
+        {
+          "id": "TC-003",
+          "name": "Handle very short note input",
+          "priority": "Medium",
+          "type": "Edge Case",
+          "preconditions": [
+            "The refinement panel is open."
+          ],
+          "steps": [
+            "Enter a single sentence or fragment.",
+            "Submit the refinement form."
+          ],
+          "expectedResult": "The output still renders the structured story package and flags missing detail as needed.",
+          "testData": [
+            "Need story for access checks"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Onboarding answer coverage",
+      "acceptanceCriterion": "The agent cites the document it used and falls back when the answer is missing.",
+      "testCases": [
+        {
+          "id": "TC-004",
+          "name": "Return cited onboarding guidance",
+          "priority": "High",
+          "type": "Positive",
+          "preconditions": [
+            "At least one onboarding document exists in the fixture set."
+          ],
+          "steps": [
+            "Enter a role and first-week question.",
+            "Submit the onboarding request."
+          ],
+          "expectedResult": "The answer cites the relevant document names and provides a concise response.",
+          "testData": [
+            "Developer",
+            "first-week"
+          ]
+        },
+        {
+          "id": "TC-005",
+          "name": "Report missing documentation",
+          "priority": "High",
+          "type": "Negative",
+          "preconditions": [
+            "The requested topic is not in the document set."
+          ],
+          "steps": [
+            "Ask a question that does not match any document.",
+            "Submit the onboarding request."
+          ],
+          "expectedResult": "The agent says the information was not found and suggests a likely person or channel.",
+          "testData": [
+            "What is our release road map?"
+          ]
+        },
+        {
+          "id": "TC-006",
+          "name": "Handle empty question",
+          "priority": "Medium",
+          "type": "Boundary",
+          "preconditions": [
+            "The onboarding form is open."
+          ],
+          "steps": [
+            "Leave the question blank.",
+            "Submit the onboarding form."
+          ],
+          "expectedResult": "The UI blocks submission and prompts for a question before searching documents.",
+          "testData": [
+            ""
+          ]
+        }
+      ]
+    }
+  ]
+}
