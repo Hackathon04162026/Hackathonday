@@ -1,0 +1,41 @@
+{
+  "description": "Regular folder inputs used by the hackathon app.",
+  "roots": [
+    {
+      "id": "java-spring-oracle-legacy",
+      "technology": "Java",
+      "path": "D:/Project/Hackathonday/sample-projects/java-spring-oracle-legacy",
+      "focus": ["Spring Boot", "Oracle", "PL/SQL"]
+    },
+    {
+      "id": "angular-mssql-legacy",
+      "technology": "Angular",
+      "path": "D:/Project/Hackathonday/sample-projects/angular-mssql-legacy",
+      "focus": ["Angular", "MS SQL Server", "TypeScript"]
+    },
+    {
+      "id": "react-node-postgres-legacy",
+      "technology": "React",
+      "path": "D:/Project/Hackathonday/sample-projects/react-node-postgres-legacy",
+      "focus": ["React", "Node", "Postgres"]
+    },
+    {
+      "id": "dotnet-sqlserver-legacy",
+      "technology": ".NET",
+      "path": "D:/Project/Hackathonday/sample-projects/dotnet-sqlserver-legacy",
+      "focus": [".NET", "SQL Server"]
+    },
+    {
+      "id": "python-django-postgres-legacy",
+      "technology": "Python",
+      "path": "D:/Project/Hackathonday/sample-projects/python-django-postgres-legacy",
+      "focus": ["Python", "Django", "Postgres"]
+    },
+    {
+      "id": "mixed-enterprise-workspace",
+      "technology": "Mixed",
+      "path": "D:/Project/Hackathonday/sample-projects/mixed-enterprise-workspace",
+      "focus": ["Java", "Angular", "React", ".NET", "Python", "Docker", "CI"]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "name": "sample-project-analyzer",
+  "version": "0.1.0",
+  "description": "Analyze regular sample-project folders and produce modernization findings.",
+  "author": {
+    "name": "Hackathonday Team",
+    "email": "team@hackathonday.local",
+    "url": "https://github.com/Hackathon04162026/Hackathonday"
+  },
+  "homepage": "https://github.com/Hackathon04162026/Hackathonday",
+  "repository": "https://github.com/Hackathon04162026/Hackathonday",
+  "license": "MIT",
+  "keywords": [
+    "modernization",
+    "sample-projects",
+    "analysis",
+    "codex",
+    "workspace"
+  ],
+  "interface": {
+    "displayName": "Sample Project Analyzer",
+    "shortDescription": "Analyze regular sample folders.",
+    "longDescription": "Folder-first analysis plugin for Java, Angular, React, .NET, Python, and mixed workspaces stored under sample-projects.",
+    "developerName": "Hackathonday",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Analyze",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Analyze a sample-project folder and summarize the stack.",
+      "Generate modernization findings for a regular workspace.",
+      "Compare single-stack and mixed sample projects."
+    ],
+    "brandColor": "#1F5EFF"
+  }
+}

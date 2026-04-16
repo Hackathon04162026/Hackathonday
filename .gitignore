@@ -8,3 +8,8 @@ Desktop.ini
 *.log
 __pycache__/
 *.pyc
+tools/
+migration-helper/target/
+migration-helper/vite-dev.out.log
+migration-helper/vite-dev.err.log
+migration-helper/vite-dev.log
