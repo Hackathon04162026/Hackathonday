@@ -1,13 +1,13 @@
 [project]
 name = "python-jobs"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
-  "fastapi==0.115.0",
-  "uvicorn==0.30.6",
-  "pydantic==2.8.2",
-  "psycopg2-binary==2.9.9",
-  "sqlalchemy==2.0.32",
-  "requests==2.32.3",
-  "celery==5.4.0"
+  "fastapi==0.95.2",
+  "uvicorn==0.22.0",
+  "pydantic==1.10.15",
+  "psycopg2-binary==2.9.6",
+  "sqlalchemy==1.4.49",
+  "requests==2.28.2",
+  "celery==5.2.7"
 ]

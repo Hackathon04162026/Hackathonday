@@ -1,7 +1,7 @@
 # Dotnet SQL Server Legacy
 
 Legacy .NET sample with:
-- .NET 6 SDK baseline
+- .NET 5 SDK baseline
 - central package management
 - SQL Server connection string
 - Dapper, Newtonsoft.Json, Serilog.AspNetCore, Swashbuckle.AspNetCore, and Microsoft.Extensions.Configuration.Json in the stack

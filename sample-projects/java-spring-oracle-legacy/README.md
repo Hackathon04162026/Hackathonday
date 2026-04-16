@@ -2,11 +2,12 @@
 
 Legacy Java sample with:
 - Java 8
-- Spring Boot 2.1.x
-- Oracle JDBC plus older commons/http libraries
+- Spring Boot 2.0.x
+- Oracle JDBC plus older commons/http libraries that are easy upgrade blockers
 - PL-SQL package artifact
 - hardcoded credentials and audit/export URLs
 - branching-heavy service logic with repeated review rules
+- intentionally old commons and HTTP versions so the scanner has clear red flags
 
 What the scanner should notice:
 - secret-like values in `application.properties` and service code

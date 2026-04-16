@@ -3,7 +3,7 @@
 Small legacy Django sample for modernization demos.
 
 This fixture intentionally mixes:
-- Python 3.10 plus Django 4.1 and DRF
+- Python 3.9 plus Django 3.2 and DRF
 - PostgreSQL access through `psycopg2-binary`
 - hardcoded secrets and debug-friendly settings
 - sample PII hints in test data

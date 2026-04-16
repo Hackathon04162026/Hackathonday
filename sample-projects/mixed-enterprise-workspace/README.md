@@ -3,10 +3,10 @@
 This sample combines multiple platforms in one repository to demonstrate cross-platform detection.
 
 It intentionally includes:
-- Java 11 / Spring Boot 2.7 style service code with older helper libraries
-- Angular 15 portal code with legacy UI dependencies and repeated logic
-- React dashboard code with noisy data handling and duplicated transforms
-- .NET 7 API scaffolding with direct SQL access and verbose mapping logic
+- Java 8 / Spring Boot 2.6 style service code with older helper libraries
+- Angular 12 portal code with legacy UI dependencies and repeated logic
+- React 17 dashboard code with noisy data handling and duplicated transforms
+- .NET 5 API scaffolding with direct SQL access and verbose mapping logic
 - Python FastAPI job code with legacy branching and PII hints in fixture data
 - Docker and CI files so the workspace looks like a real enterprise monorepo
 

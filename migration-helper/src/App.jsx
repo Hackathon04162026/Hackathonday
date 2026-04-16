@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_REPORT_FILTERS,
   DEFAULT_SCAN_FILTERS,
@@ -53,7 +53,7 @@ const PAGE_COPY = {
 };
 
 const HELP_SECTIONS = [
-  ["Home", "Project intake and scan control", "This page starts the workflow. It contains the folder path field, the folder upload button, the quick analysis progress bar, the short report, and the target-version section."],
+  ["Home", "Project intake and scan control", "This page starts the workflow. It contains the folder path field, the quick analysis progress bar, the short report, and the target-version section."],
   ["Overview", "Metrics and snapshot", "This page gives the executive summary: scan counts, selected scan status, lifecycle, and report readiness."],
   ["Analysis", "Findings and review", "This page shows the detailed detector rows, support policy entries, recommendations, and warnings."],
   ["Documentation", "Confluence-ready output", "This page groups the report into reusable documentation blocks that are easy to copy into a team wiki."],
@@ -173,16 +173,18 @@ function isOutOfSupportVersion(value) {
     /\bout of support\b/,
     /\blegacy\b/,
     /\bjava 8\b/,
-    /\b2\.1\.18(?:\.release)?\b/,
-    /\bangular 10\b|\b10\b/,
+    /\b2\.(?:0|1)\.[0-9]+(?:\.release)?\b/,
+    /\bangular (?:8|9|10)\b|\b(?:8|9|10)\b/,
     /\breact 16\b/,
-    /\bcore 3\.1\b/,
-    /\bpython 3\.8\b/,
-    /\bdjango 2\.2\b/,
-    /\bpostgres\b.*\b12\b/,
-    /\bsql server\b.*\b2017\b/,
-    /\brxjs\b.*\b6\.x\b/,
-    /\bentity framework core\b.*\b3\.x\b/,
+    /\bcore (?:3\.1|5(?:\.0)?)\b/,
+    /\bpython 3\.(?:8|9)\b/,
+    /\bdjango (?:2\.2|3\.2)\b/,
+    /\bpostgres\b.*\b(?:12|13)\b/,
+    /\bsql server\b.*\b(?:2017|2019)\b/,
+    /\brxjs\b.*\b(?:5|6)(?:\.x)?\b/,
+    /\bentity framework core\b.*\b(?:3\.x|5\.x|4\.)\b/,
+    /\bexpress\b.*\b4\./,
+    /\breact-scripts\b.*\b3\./,
     /\bpytest\b.*\blegacy\b/
   ].some((pattern) => pattern.test(normalized));
 }
@@ -307,7 +309,7 @@ export default function App() {
   const [notice, setNotice] = useState(null);
   const [scanListStatus, setScanListStatus] = useState("Loading scans...");
   const [pathForm, setPathForm] = useState(EMPTY_PATH_FORM);
-  const [sampleChoice, setSampleChoice] = useState(SAMPLE_PROJECTS[0]?.id || "");
+  const [sampleChoice, setSampleChoice] = useState("");
   const [quickLoading, setQuickLoading] = useState(false);
   const [quickProgress, setQuickProgress] = useState(0);
   const [quickStage, setQuickStage] = useState("Ready to scan a folder.");
@@ -317,7 +319,6 @@ export default function App() {
   const [deepAnalysisReady, setDeepAnalysisReady] = useState(false);
   const [approvalChoice, setApprovalChoice] = useState("no");
   const [samplePreview, setSamplePreview] = useState(null);
-  const folderInputRef = useRef(null);
 
   useEffect(() => {
     void bootstrap();
@@ -475,50 +476,8 @@ export default function App() {
     warnings: selectedReport?.warnings?.length || 0
   };
 
-  function applySampleProject(sample) {
-    resetQuickFlow();
-    setPathForm((current) => ({
-      ...current,
-      path: sample.path,
-      displayName: sample.label,
-      requestedBy: current.requestedBy || "demo"
-    }));
-    setSampleChoice(sample.id);
-    setNotice({ tone: "info", message: `${sample.label} is ready in the path scan form.` });
-  }
-
-  function handleFolderUpload(event) {
-    const files = Array.from(event.target.files || []);
-    if (files.length === 0) {
-      return;
-    }
-
-    const firstFile = files[0];
-    const relativePath = firstFile.webkitRelativePath || firstFile.name || "";
-    const folderName = relativePath.split("/")[0] || relativePath;
-    const normalizedFolder = normalizePathForMatch(folderName);
-    const matchingSample = SAMPLE_PROJECTS.find(
-      (sample) => normalizedFolder === sample.id || normalizedFolder === normalizePathForMatch(sample.path).split("/").pop()
-    );
-
-    if (matchingSample) {
-      applySampleProject(matchingSample);
-    } else {
-      resetQuickFlow();
-      setPathForm((current) => ({
-        ...current,
-        path: folderName,
-        displayName: folderName,
-        requestedBy: current.requestedBy || "demo"
-      }));
-      setNotice({ tone: "info", message: `${folderName} loaded into the path field.` });
-    }
-
-    event.target.value = "";
-  }
-
   const selectedSample = useMemo(
-    () => SAMPLE_PROJECTS.find((sample) => sample.id === sampleChoice) || SAMPLE_PROJECTS[0] || null,
+    () => SAMPLE_PROJECTS.find((sample) => sample.id === sampleChoice) || null,
     [sampleChoice]
   );
   const activeSample = useMemo(
@@ -536,8 +495,8 @@ export default function App() {
     : null;
   const reportDownloadLabel = quickReport ? `complete-report-${quickReport.sampleId}` : "complete-report";
   const targetGroups = useMemo(
-    () => buildTargetGroupsForSample(activeSample),
-    [activeSample]
+    () => quickReport ? groupTargetRows(quickReport.targets || []) : buildTargetGroupsForSample(activeSample),
+    [activeSample, quickReport]
   );
 
   function resetQuickFlow() {
@@ -552,15 +511,39 @@ export default function App() {
     setSamplePreview(null);
   }
 
+  async function handleBrowseFolder() {
+    try {
+      const response = await fetch("/api/pick-folder", { method: "POST" });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || "Folder selection failed.");
+      }
+      const nextPath = String(payload?.path || "").trim();
+      if (!nextPath) {
+        return;
+      }
+      resetQuickFlow();
+      setPathForm((current) => ({ ...current, path: nextPath }));
+      const matchingSample = resolveSampleForPath(nextPath, selectedSample);
+      setSampleChoice(matchingSample?.id || "");
+      setNotice({ tone: "info", message: "Folder path loaded into the textbox." });
+    } catch (error) {
+      if (String(error?.message || "").includes("cancelled")) {
+        setNotice({ tone: "warning", message: "Folder selection was cancelled." });
+        return;
+      }
+      setNotice({ tone: "danger", message: error?.message || "Folder selection failed." });
+    }
+  }
+
   async function startQuickAnalysis(event) {
     event?.preventDefault?.();
-    const sourceSample = activeSample;
-    if (!sourceSample) {
-      setNotice({ tone: "warning", message: "Choose a sample project or type a folder path first." });
+    const folderPath = String(pathForm.path || "").trim();
+    if (!folderPath) {
+      setNotice({ tone: "warning", message: "Enter a folder path first." });
       return;
     }
 
-    setSampleChoice(sourceSample.id);
     setQuickLoading(true);
     setQuickProgress(0);
     setQuickStage("Reading folder");
@@ -579,28 +562,48 @@ export default function App() {
       setQuickStage(stage);
     }
 
-    const report = buildQuickReport(sourceSample, pathForm.path || sourceSample.path);
+    let report;
+    try {
+      const response = await fetch("/api/quick-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: folderPath })
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || "Quick analysis failed.");
+      }
+      report = payload;
+    } catch (error) {
+      setQuickLoading(false);
+      setNotice({ tone: "danger", message: error?.message || "Quick analysis failed." });
+      return;
+    }
+
+    const resolvedSample = resolveSampleForPath(folderPath, selectedSample);
+    setSampleChoice(resolvedSample?.id || "");
     const defaults = Object.fromEntries(report.targets.map((item) => [item.id, item.defaultTarget]));
     const scanWarnings = report.risks.map((risk, index) => ({
       code: `RISK_${index + 1}`,
       severity: "INFO",
       message: risk
     }));
+    const primaryTechnology = report.primaryTechnology || resolvedSample?.technology || "Workspace";
     const detectorRows = report.technologies.map((item) => ({
-      ecosystem: sourceSample.technology,
+      ecosystem: primaryTechnology,
       component: item.label,
       detectedVersion: item.current,
       confidence: "HIGH"
     }));
     const policyRows = [...report.technologies, ...report.databases, ...report.libraries].map((item) => ({
-      ecosystem: sourceSample.technology,
+      ecosystem: primaryTechnology,
       component: item.label,
       supportStatus: buildSupportStatus(item.label, item.current),
       version: item.current,
       source: "quick-analysis"
     }));
     const recommendationRows = report.nextSteps.map((step, index) => ({
-      ecosystem: sourceSample.technology,
+      ecosystem: primaryTechnology,
       component: `Step ${index + 1}`,
       recommendedVersion: index === 0 ? report.targets[0]?.defaultTarget || "Target version" : "Review",
       rationale: step
@@ -644,7 +647,7 @@ export default function App() {
     setSelectedScan(selectedScanDetail);
     setSelectedReport(selectedReportDetail);
     setQuickLoading(false);
-    setNotice({ tone: "success", message: `${sourceSample.label} scanned. Review the short report, download the report, and choose target versions.` });
+    setNotice({ tone: "success", message: `${report.sampleLabel} scanned from the provided folder path. Review the short report, download the report, and choose target versions.` });
   }
 
   function updateTargetSelection(itemId, value) {
@@ -715,7 +718,7 @@ export default function App() {
           <section id="api-reference" style={STYLES.brand}>
             <p style={STYLES.eyebrow}>Workspace snapshot</p>
             <h2 style={{ margin: 0 }}>Included flows</h2>
-            <p style={STYLES.subtitle}>Folder uploads, manual path scans, quick analysis, target selection, documentation, roadmap, and help all live in one workspace.</p>
+            <p style={STYLES.subtitle}>Manual path scans, quick analysis, target selection, documentation, roadmap, and help all live in one workspace.</p>
             <div style={STYLES.threeCol}>
               <MetricCard label="Total scans" value={summary.totalScans} />
               <MetricCard label="Complete" value={summary.completeScans} />
@@ -780,8 +783,8 @@ export default function App() {
                     <div className="stack">
                       <div>
                         <p style={STYLES.cardEyebrow}>Folder-first scan</p>
-                        <h2 style={{ marginTop: 0 }}>Start with one path or a project folder</h2>
-                        <p className="muted-line">Browse to a project folder or type a local path manually, then run quick analysis to surface the stack inventory.</p>
+                        <h2 style={{ marginTop: 0 }}>Start with one folder path</h2>
+                        <p className="muted-line">Type the local folder path, then run quick analysis to surface the stack inventory from that project location.</p>
                       </div>
                         <Field label="Folder path">
                           <input
@@ -791,31 +794,20 @@ export default function App() {
                               resetQuickFlow();
                               setPathForm({ ...pathForm, path: nextPath });
                               const matchingSample = resolveSampleForPath(nextPath, selectedSample);
-                              if (matchingSample?.id) {
-                                setSampleChoice(matchingSample.id);
-                              }
+                              setSampleChoice(matchingSample?.id || "");
                             }}
-                            placeholder="D:/Project/Hackathonday/sample-projects/java-spring-oracle-legacy"
+                            placeholder="Enter local project folder path"
                           />
                         </Field>
-                      <input
-                        ref={folderInputRef}
-                        type="file"
-                        webkitdirectory="true"
-                        directory=""
-                        multiple
-                        hidden
-                        onChange={handleFolderUpload}
-                      />
                       <div className="actions-row">
-                        <button type="button" className="secondary" onClick={() => folderInputRef.current?.click()}>
-                          Upload folder
+                        <button type="button" className="secondary" onClick={() => void handleBrowseFolder()} disabled={quickLoading}>
+                          Browse folder
                         </button>
                         <button type="button" onClick={(event) => void startQuickAnalysis(event)} disabled={quickLoading}>
                           {quickLoading ? `${quickProgress}% scanning` : "Quick analysis"}
                         </button>
                       </div>
-                      <p className="muted-line">Use the upload button to browse to a project folder, or paste a path manually for quick analysis.</p>
+                      <p className="muted-line">Paste the project folder path and quick analysis will scan that location directly on your machine.</p>
                     </div>
                     <div className="stack">
                       <div className="card" style={{ padding: 18 }}>
@@ -1152,7 +1144,6 @@ export default function App() {
                 <div className="table-wrap">
                   <table>
                     <tbody>
-                        <tr><td><strong>Upload folder</strong></td><td>Lets you browse to a project folder and load it into the quick-analysis path field.</td></tr>
                         <tr><td><strong>Manual path</strong></td><td>Lets you paste a local folder path directly before scanning.</td></tr>
                       <tr><td><strong>Use</strong></td><td>Loads the selected scan into the workspace views.</td></tr>
                       <tr><td><strong>Details</strong></td><td>Opens the selected scan drawer for a closer look.</td></tr>
