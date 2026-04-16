@@ -803,6 +803,29 @@ tbody tr:hover { background: rgba(243, 111, 53, 0.04); }
   color: var(--primary-strong);
 }
 
+.version-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(26, 35, 56, 0.12);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.version-chip.is-unsupported {
+  border-color: rgba(180, 35, 24, 0.22);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.analysis-row-danger td {
+  background: linear-gradient(180deg, rgba(253, 236, 236, 0.36), rgba(255, 255, 255, 0.92));
+}
+
 .empty-state {
   display: grid;
   place-items: center;

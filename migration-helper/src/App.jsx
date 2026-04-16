@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DEFAULT_REPORT_FILTERS,
   DEFAULT_SCAN_FILTERS,
@@ -44,7 +44,7 @@ const NAV_ITEMS = [
 ];
 
 const PAGE_COPY = {
-  home: ["Folder-first scan", "Home", "Choose a sample-project folder or enter a local path, run quick analysis, review the short report, and then prepare target versions for deeper analysis."],
+  home: ["Folder-first scan", "Home", "Choose a project folder or enter a local path, run quick analysis, review the short report, and then prepare target versions for deeper analysis."],
   overview: ["Current state", "Overview", "See the selected scan at a glance with summary metrics, lifecycle status, and export shortcuts."],
   analysis: ["Findings", "Analysis", "Review detector rows, policy statuses, recommendations, and warnings in a single filterable table."],
   documentation: ["Knowledge handoff", "Documentation", "Turn the selected report into Confluence-friendly sections and copyable summary payloads."],
@@ -53,7 +53,7 @@ const PAGE_COPY = {
 };
 
 const HELP_SECTIONS = [
-  ["Home", "Project intake and scan control", "This page starts the workflow. It contains the folder path field, the sample-project dropdown, the quick analysis progress bar, the short report, and the target-version section."],
+  ["Home", "Project intake and scan control", "This page starts the workflow. It contains the folder path field, the folder upload button, the quick analysis progress bar, the short report, and the target-version section."],
   ["Overview", "Metrics and snapshot", "This page gives the executive summary: scan counts, selected scan status, lifecycle, and report readiness."],
   ["Analysis", "Findings and review", "This page shows the detailed detector rows, support policy entries, recommendations, and warnings."],
   ["Documentation", "Confluence-ready output", "This page groups the report into reusable documentation blocks that are easy to copy into a team wiki."],
@@ -164,6 +164,47 @@ function normalizePathForMatch(value) {
     .replace(/\/$/, "");
 }
 
+function isOutOfSupportVersion(value) {
+  const normalized = String(value || "").toLowerCase().trim();
+  if (!normalized) {
+    return false;
+  }
+  return [
+    /\bout of support\b/,
+    /\blegacy\b/,
+    /\bjava 8\b/,
+    /\b2\.1\.18(?:\.release)?\b/,
+    /\bangular 10\b|\b10\b/,
+    /\breact 16\b/,
+    /\bcore 3\.1\b/,
+    /\bpython 3\.8\b/,
+    /\bdjango 2\.2\b/,
+    /\bpostgres\b.*\b12\b/,
+    /\bsql server\b.*\b2017\b/,
+    /\brxjs\b.*\b6\.x\b/,
+    /\bentity framework core\b.*\b3\.x\b/,
+    /\bpytest\b.*\blegacy\b/
+  ].some((pattern) => pattern.test(normalized));
+}
+
+function buildSupportStatus(label, current) {
+  const labelWithVersion = `${label || ""} ${current || ""}`.trim();
+  if (isOutOfSupportVersion(labelWithVersion)) {
+    return "Out of support";
+  }
+  return "Supported with review";
+}
+
+function isAnalysisRowOutOfSupport(row) {
+  if (!row) {
+    return false;
+  }
+  if (row.type === "recommendation" || row.type === "warning") {
+    return false;
+  }
+  return isOutOfSupportVersion(`${row.component} ${row.version}`) || isOutOfSupportVersion(row.notes);
+}
+
 function buildSampleConversionPackage(report, targetSelections, guardrailSummary, deepAnalysisReady) {
   const targets = Object.entries(targetSelections)
     .map(([id, value]) => {
@@ -265,9 +306,7 @@ export default function App() {
   const [reportFilters, setReportFilters] = useState(DEFAULT_REPORT_FILTERS);
   const [notice, setNotice] = useState(null);
   const [scanListStatus, setScanListStatus] = useState("Loading scans...");
-  const [archiveForm, setArchiveForm] = useState(EMPTY_ARCHIVE_FORM);
   const [pathForm, setPathForm] = useState(EMPTY_PATH_FORM);
-  const [samplePickerOpen, setSamplePickerOpen] = useState(false);
   const [sampleChoice, setSampleChoice] = useState(SAMPLE_PROJECTS[0]?.id || "");
   const [quickLoading, setQuickLoading] = useState(false);
   const [quickProgress, setQuickProgress] = useState(0);
@@ -278,6 +317,7 @@ export default function App() {
   const [deepAnalysisReady, setDeepAnalysisReady] = useState(false);
   const [approvalChoice, setApprovalChoice] = useState("no");
   const [samplePreview, setSamplePreview] = useState(null);
+  const folderInputRef = useRef(null);
 
   useEffect(() => {
     void bootstrap();
@@ -447,6 +487,36 @@ export default function App() {
     setNotice({ tone: "info", message: `${sample.label} is ready in the path scan form.` });
   }
 
+  function handleFolderUpload(event) {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) {
+      return;
+    }
+
+    const firstFile = files[0];
+    const relativePath = firstFile.webkitRelativePath || firstFile.name || "";
+    const folderName = relativePath.split("/")[0] || relativePath;
+    const normalizedFolder = normalizePathForMatch(folderName);
+    const matchingSample = SAMPLE_PROJECTS.find(
+      (sample) => normalizedFolder === sample.id || normalizedFolder === normalizePathForMatch(sample.path).split("/").pop()
+    );
+
+    if (matchingSample) {
+      applySampleProject(matchingSample);
+    } else {
+      resetQuickFlow();
+      setPathForm((current) => ({
+        ...current,
+        path: folderName,
+        displayName: folderName,
+        requestedBy: current.requestedBy || "demo"
+      }));
+      setNotice({ tone: "info", message: `${folderName} loaded into the path field.` });
+    }
+
+    event.target.value = "";
+  }
+
   const selectedSample = useMemo(
     () => SAMPLE_PROJECTS.find((sample) => sample.id === sampleChoice) || SAMPLE_PROJECTS[0] || null,
     [sampleChoice]
@@ -522,10 +592,10 @@ export default function App() {
       detectedVersion: item.current,
       confidence: "HIGH"
     }));
-    const policyRows = report.databases.map((item) => ({
-      ecosystem: item.label,
+    const policyRows = [...report.technologies, ...report.databases, ...report.libraries].map((item) => ({
+      ecosystem: sourceSample.technology,
       component: item.label,
-      supportStatus: item.defaultTarget,
+      supportStatus: buildSupportStatus(item.label, item.current),
       version: item.current,
       source: "quick-analysis"
     }));
@@ -645,7 +715,7 @@ export default function App() {
           <section id="api-reference" style={STYLES.brand}>
             <p style={STYLES.eyebrow}>Workspace snapshot</p>
             <h2 style={{ margin: 0 }}>Included flows</h2>
-            <p style={STYLES.subtitle}>Sample-project dropdowns, manual path scans, quick analysis, target selection, documentation, roadmap, and help all live in one workspace.</p>
+            <p style={STYLES.subtitle}>Folder uploads, manual path scans, quick analysis, target selection, documentation, roadmap, and help all live in one workspace.</p>
             <div style={STYLES.threeCol}>
               <MetricCard label="Total scans" value={summary.totalScans} />
               <MetricCard label="Complete" value={summary.completeScans} />
@@ -710,8 +780,8 @@ export default function App() {
                     <div className="stack">
                       <div>
                         <p style={STYLES.cardEyebrow}>Folder-first scan</p>
-                        <h2 style={{ marginTop: 0 }}>Start with one path or a sample project</h2>
-                        <p className="muted-line">Pick a sample-project folder from the repo or type a local path manually, then run quick analysis to surface the stack inventory.</p>
+                        <h2 style={{ marginTop: 0 }}>Start with one path or a project folder</h2>
+                        <p className="muted-line">Browse to a project folder or type a local path manually, then run quick analysis to surface the stack inventory.</p>
                       </div>
                         <Field label="Folder path">
                           <input
@@ -728,46 +798,24 @@ export default function App() {
                             placeholder="D:/Project/Hackathonday/sample-projects/java-spring-oracle-legacy"
                           />
                         </Field>
+                      <input
+                        ref={folderInputRef}
+                        type="file"
+                        webkitdirectory="true"
+                        directory=""
+                        multiple
+                        hidden
+                        onChange={handleFolderUpload}
+                      />
                       <div className="actions-row">
-                        <button type="button" className="secondary" onClick={() => setSamplePickerOpen((current) => !current)}>
-                          {samplePickerOpen ? "Hide sample projects" : "Load sample projects"}
+                        <button type="button" className="secondary" onClick={() => folderInputRef.current?.click()}>
+                          Upload folder
                         </button>
                         <button type="button" onClick={(event) => void startQuickAnalysis(event)} disabled={quickLoading}>
                           {quickLoading ? `${quickProgress}% scanning` : "Quick analysis"}
                         </button>
                       </div>
-                      {samplePickerOpen && (
-                        <div className="card" style={{ padding: 14 }}>
-                          <div className="stack">
-                            <p style={{ ...STYLES.cardEyebrow, marginBottom: 0 }}>Sample projects</p>
-                            <Field label="Choose project">
-                              <select
-                                value={sampleChoice}
-                                onChange={(event) => {
-                                  const sample = SAMPLE_PROJECTS.find((entry) => entry.id === event.target.value);
-                                  resetQuickFlow();
-                                  setSampleChoice(event.target.value);
-                                  if (sample) {
-                                    setPathForm((current) => ({
-                                      ...current,
-                                      path: sample.path,
-                                      displayName: sample.label
-                                    }));
-                                    setNotice({ tone: "info", message: `${sample.label} loaded into the path field.` });
-                                  }
-                                }}
-                              >
-                                {SAMPLE_PROJECTS.map((sample) => (
-                                  <option key={sample.id} value={sample.id}>
-                                    {sample.label} - {sample.description}
-                                  </option>
-                                ))}
-                              </select>
-                            </Field>
-                            <p className="muted-line">The dropdown reads from <code>sample-projects</code>, while the path field still accepts manual folder input.</p>
-                          </div>
-                        </div>
-                      )}
+                      <p className="muted-line">Use the upload button to browse to a project folder, or paste a path manually for quick analysis.</p>
                     </div>
                     <div className="stack">
                       <div className="card" style={{ padding: 18 }}>
@@ -1023,15 +1071,22 @@ export default function App() {
                   <table>
                     <thead><tr><th>Type</th><th>Ecosystem</th><th>Component</th><th>Version or Status</th><th>Notes</th></tr></thead>
                     <tbody>
-                      {filteredReportRows.length === 0 ? <tr><td colSpan="5">No report selected</td></tr> : filteredReportRows.map((row, index) => (
-                        <tr key={`${row.type}-${row.component}-${index}`}>
-                          <td><span className={`result-type ${row.type}`}>{row.type}</span></td>
-                          <td>{row.ecosystem}</td>
-                          <td>{row.component}</td>
-                          <td>{row.version}</td>
-                          <td>{row.notes}</td>
-                        </tr>
-                      ))}
+                      {filteredReportRows.length === 0 ? <tr><td colSpan="5">No report selected</td></tr> : filteredReportRows.map((row, index) => {
+                        const unsupported = isAnalysisRowOutOfSupport(row);
+                        return (
+                          <tr key={`${row.type}-${row.component}-${index}`} className={unsupported ? "analysis-row-danger" : undefined}>
+                            <td><span className={`result-type ${row.type}`}>{row.type}</span></td>
+                            <td>{row.ecosystem}</td>
+                            <td>{row.component}</td>
+                            <td>
+                              <span className={unsupported ? "version-chip is-unsupported" : "version-chip"}>
+                                {row.version}
+                              </span>
+                            </td>
+                            <td>{row.notes}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1097,8 +1152,8 @@ export default function App() {
                 <div className="table-wrap">
                   <table>
                     <tbody>
-                      <tr><td><strong>Load sample folder</strong></td><td>Adds a new sample-project folder scan to the list.</td></tr>
-                      <tr><td><strong>Load local path</strong></td><td>Adds a new path-based scan to the list.</td></tr>
+                        <tr><td><strong>Upload folder</strong></td><td>Lets you browse to a project folder and load it into the quick-analysis path field.</td></tr>
+                        <tr><td><strong>Manual path</strong></td><td>Lets you paste a local folder path directly before scanning.</td></tr>
                       <tr><td><strong>Use</strong></td><td>Loads the selected scan into the workspace views.</td></tr>
                       <tr><td><strong>Details</strong></td><td>Opens the selected scan drawer for a closer look.</td></tr>
                       <tr><td><strong>Export JSON</strong></td><td>Downloads the current scan list or report rows as JSON.</td></tr>
