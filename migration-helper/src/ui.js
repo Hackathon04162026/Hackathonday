@@ -74,7 +74,7 @@ export function createDetailFromSummary(scan) {
     sourceType: scan.sourceType,
     displayName: scan.displayName,
     requestedBy: scan.requestedBy,
-    sourceReference: scan.displayName,
+    sourceReference: scan.sourceReference || scan.displayName,
     createdAt: scan.createdAt,
     startedAt: scan.createdAt,
     completedAt: scan.updatedAt,

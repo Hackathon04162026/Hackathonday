@@ -5,6 +5,7 @@ import {
   applyReportFilters,
   applyScanFilters,
   calculateSummary,
+  createDetailFromSummary,
   flattenReport,
   normalizeStatus,
   prettySource
@@ -64,5 +65,20 @@ describe("ui helpers", () => {
   it("pretty prints source labels", () => {
     expect(prettySource("ARCHIVE_UPLOAD")).toBe("Archive upload");
     expect(prettySource("LOCAL_PATH")).toBe("Path scan");
+  });
+
+  it("preserves sourceReference when rebuilding detail from a path scan summary", () => {
+    const detail = createDetailFromSummary({
+      id: "scan-path-1",
+      status: "COMPLETED",
+      sourceType: "LOCAL_PATH",
+      displayName: "Demo label",
+      requestedBy: "cli",
+      sourceReference: "C:/repos/demo",
+      createdAt: "2026-04-16T19:00:00Z",
+      updatedAt: "2026-04-16T19:01:00Z"
+    });
+
+    expect(detail.sourceReference).toBe("C:/repos/demo");
   });
 });

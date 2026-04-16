@@ -258,6 +258,7 @@ export default function App() {
       sourceType: detailResponse.sourceType,
       displayName: detailResponse.displayName,
       requestedBy: detailResponse.requestedBy,
+      sourceReference: detailResponse.sourceReference,
       createdAt: detailResponse.createdAt,
       updatedAt: detailResponse.updatedAt,
       warnings: detailResponse.warnings || []
