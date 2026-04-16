@@ -2450,6 +2450,139 @@ function splitMultiline(value) {
   return String(value || "").split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
 }
 
+function hydrateWorkspacePlan(plan, fallbackPlan = null) {
+  const source = plan && typeof plan === "object" ? plan : {};
+  const stage = source.currentStage || source.stage || fallbackPlan?.currentStage || PLANNING_STAGES.EPIC_REVIEW;
+  const targetUsers = Array.isArray(source.targetUsers)
+    ? source.targetUsers.join(", ")
+    : source.targetUsers || fallbackPlan?.targetUsers || PLANNING_SEED_VISION.targetUsers;
+  const desiredOutcomes = Array.isArray(source.desiredOutcomes) && source.desiredOutcomes.length > 0
+    ? source.desiredOutcomes
+    : fallbackPlan?.desiredOutcomes || PLANNING_SEED_VISION.desiredOutcomes;
+
+  let seededPlan = createPlan(
+    {
+      vision: source.vision || fallbackPlan?.vision || PLANNING_SEED_VISION.vision,
+      programLead: source.programLead || fallbackPlan?.programLead || PLANNING_SEED_VISION.programLead,
+      productName: source.productName || source.displayName || fallbackPlan?.productName || PLANNING_SEED_VISION.productName,
+      targetUsers,
+      desiredOutcomes
+    },
+    {
+      id: source.id || fallbackPlan?.id,
+      createdAt: source.createdAt || fallbackPlan?.createdAt || new Date().toISOString(),
+      updatedAt: source.updatedAt || fallbackPlan?.updatedAt || new Date().toISOString()
+    }
+  );
+
+  if (stage === PLANNING_STAGES.FEATURE_REVIEW || stage === PLANNING_STAGES.STORY_READY) {
+    seededPlan = approveReview(
+      seededPlan,
+      REVIEW_STAGES.EPICS,
+      {
+        reviewer: source.reviewCheckpoints?.find((checkpoint) => String(checkpoint.stage || "").toLowerCase().includes("epic"))?.reviewer
+          || fallbackPlan?.programLead
+          || source.programLead
+          || PLANNING_SEED_VISION.programLead,
+        notes: source.reviewCheckpoints?.find((checkpoint) => String(checkpoint.stage || "").toLowerCase().includes("epic"))?.notes
+          || "Approved for feature decomposition."
+      },
+      {
+        reviewedAt: source.reviewCheckpoints?.find((checkpoint) => String(checkpoint.stage || "").toLowerCase().includes("epic"))?.reviewedAt
+          || source.updatedAt
+          || fallbackPlan?.updatedAt
+          || new Date().toISOString()
+      }
+    );
+  }
+
+  if (stage === PLANNING_STAGES.STORY_READY) {
+    seededPlan = approveReview(
+      seededPlan,
+      REVIEW_STAGES.FEATURES,
+      {
+        reviewer: source.reviewCheckpoints?.find((checkpoint) => String(checkpoint.stage || "").toLowerCase().includes("feature"))?.reviewer
+          || fallbackPlan?.programLead
+          || source.programLead
+          || PLANNING_SEED_VISION.programLead,
+        notes: source.reviewCheckpoints?.find((checkpoint) => String(checkpoint.stage || "").toLowerCase().includes("feature"))?.notes
+          || "Approved for story creation."
+      },
+      {
+        reviewedAt: source.reviewCheckpoints?.find((checkpoint) => String(checkpoint.stage || "").toLowerCase().includes("feature"))?.reviewedAt
+          || source.updatedAt
+          || fallbackPlan?.updatedAt
+          || new Date().toISOString()
+      }
+    );
+  }
+
+  return {
+    ...seededPlan,
+    ...source,
+    displayName: source.displayName || source.productName || seededPlan.productName,
+    productName: source.productName || source.displayName || seededPlan.productName,
+    programLead: source.programLead || seededPlan.programLead,
+    targetUsers: Array.isArray(source.targetUsers) && source.targetUsers.length > 0 ? source.targetUsers : seededPlan.targetUsers,
+    desiredOutcomes: Array.isArray(source.desiredOutcomes) && source.desiredOutcomes.length > 0 ? source.desiredOutcomes : seededPlan.desiredOutcomes,
+    currentStage: stage,
+    stage,
+    epics: Array.isArray(source.epics) && source.epics.length > 0 ? source.epics : seededPlan.epics,
+    features: Array.isArray(source.features) && source.features.length > 0 ? source.features : seededPlan.features,
+    stories: Array.isArray(source.stories) && source.stories.length > 0 ? source.stories : seededPlan.stories,
+    reviewCheckpoints: Array.isArray(source.reviewCheckpoints) && source.reviewCheckpoints.length > 0 ? source.reviewCheckpoints : seededPlan.reviewCheckpoints,
+    onboardingChecklist: Array.isArray(source.onboardingChecklist) && source.onboardingChecklist.length > 0
+      ? source.onboardingChecklist
+      : seededPlan.onboardingChecklist
+  };
+}
+
+function normalizeRefinementFixturePayload(payload, fallback) {
+  const source = payload?.story || payload?.stories?.[0] || payload;
+  if (!source || typeof source !== "object") {
+    return fallback;
+  }
+
+  return {
+    ...fallback,
+    ...source,
+    acceptanceCriteria: Array.isArray(source.acceptanceCriteria) ? source.acceptanceCriteria : fallback.acceptanceCriteria,
+    dependencies: Array.isArray(source.dependencies) ? source.dependencies : fallback.dependencies,
+    references: Array.isArray(source.references) ? source.references : fallback.references,
+    definitionOfReadyValidation: Array.isArray(source.definitionOfReadyValidation)
+      ? source.definitionOfReadyValidation
+      : fallback.definitionOfReadyValidation,
+    gaps: Array.isArray(source.gaps) ? source.gaps : fallback.gaps,
+    normalizationNotes: Array.isArray(source.normalizationNotes) ? source.normalizationNotes : fallback.normalizationNotes
+  };
+}
+
+function normalizeTestCaseFixturePayload(payload, fallback) {
+  const source = payload && typeof payload === "object" ? payload : {};
+  const testSuites = Array.isArray(source.testSuites)
+    ? source.testSuites
+    : Array.isArray(source.suites)
+      ? source.suites
+      : fallback.testSuites;
+  const summary = source.summary && typeof source.summary === "object" ? source.summary : fallback.summary;
+
+  return {
+    ...fallback,
+    ...source,
+    testSuites: testSuites.map((suite, index) => ({
+      ...suite,
+      suiteName: suite.suiteName || suite.name || `Test Suite ${index + 1}`
+    })),
+    summary: {
+      ...fallback.summary,
+      ...summary,
+      positiveCases: summary.positiveCases ?? summary.positiveCount ?? summary.positive ?? fallback.summary.positiveCases ?? 0,
+      negativeCases: summary.negativeCases ?? summary.negativeCount ?? summary.negative ?? fallback.summary.negativeCases ?? 0,
+      edgeCases: summary.edgeCases ?? summary.edgeCaseCount ?? fallback.summary.edgeCases ?? 0
+    }
+  };
+}
+
 function createPlanningWorkspaceFallback() {
   const firstPlan = createPlan(PLANNING_SEED_VISION);
   const secondPlan = approveReview(
@@ -2536,9 +2669,16 @@ async function loadMockPlanningWorkspace() {
     plans = [detail, ...plans.filter((plan) => plan.id !== detail.id)];
   }
 
+  const detailedFallbackById = new Map(fallback.plans.map((plan) => [plan.id, plan]));
+  plans = plans.map((plan) => hydrateWorkspacePlan(plan, detailedFallbackById.get(plan.id) || fallback.plans[0] || null));
+
   const documents = documentsResult.status === "fulfilled" ? documentsResult.value : fallback.onboardingDocuments;
-  const refinement = refinementResult.status === "fulfilled" ? refinementResult.value : fallback.refinement;
-  const testCases = testCaseResult.status === "fulfilled" ? testCaseResult.value : fallback.testCases;
+  const refinement = refinementResult.status === "fulfilled"
+    ? normalizeRefinementFixturePayload(refinementResult.value, fallback.refinement)
+    : fallback.refinement;
+  const testCases = testCaseResult.status === "fulfilled"
+    ? normalizeTestCaseFixturePayload(testCaseResult.value, fallback.testCases)
+    : fallback.testCases;
   const onboarding = onboardingResult.status === "fulfilled"
     ? onboardingResult.value
     : answerOnboardingQuery(
@@ -2569,7 +2709,7 @@ async function loadLivePlanningWorkspace() {
   const documents = await loadOnboardingDocuments().catch(() => []);
 
   return {
-    plans: selectedPlan ? [selectedPlan, ...plans.slice(1)] : plans,
+    plans: (selectedPlan ? [selectedPlan, ...plans.slice(1)] : plans).map((plan) => hydrateWorkspacePlan(plan, selectedPlan || null)),
     selectedPlanId: selectedPlan?.id || plans[0]?.id || null,
     refinement: createRefinementStoryPackage(buildRefinementSampleRequest()),
     testCases: generateTestCases(buildTestCaseGenerationRequest()),
